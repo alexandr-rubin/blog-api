@@ -34,6 +34,10 @@ export class UserRepository {
   }
 
   async deleteUserById(id: string) {
+    await this.dataSource.query(`
+    DELETE FROM public."Devices"
+    WHERE "userId" = $1
+    `, [id])
     const user = await this.dataSource.query(`
     DELETE FROM public."Users"
     WHERE id = $1
