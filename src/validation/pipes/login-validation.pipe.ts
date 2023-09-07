@@ -17,10 +17,9 @@ export class LoginValidationPipe implements PipeTransform {
       throw new UnauthorizedException('User with the specified login or email not found.')
     }
 
-    if(user.banInfo.isBanned){
-      throw new UnauthorizedException('User is banned')
-    }
-
+    // if(user.banInfo.isBanned){
+    //   throw new UnauthorizedException('User is banned')
+    // }
     return value
   }
 }

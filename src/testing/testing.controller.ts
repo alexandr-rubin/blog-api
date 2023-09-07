@@ -12,12 +12,12 @@ export class TestingController {
   constructor(private userService: UserService, private postService: PostService, private blogService: BlogService, private commentService: CommentService, private securityService: SecurityService){}
   @Delete()
   async deleteAllDataTesting(@Res() res: Response) {
-    await this.userService.deleteUsersTesting()
-    await this.postService.deletePostsTesting()
-    await this.blogService.deleteBlogsTesting()
-    await this.commentService.deleteCommentTesting()
     await this.securityService.deleteAllAPILogsTesting()
     await this.securityService.deleteAllDevicesTesting()
+    await this.commentService.deleteCommentTesting()
+    await this.postService.deletePostsTesting()
+    await this.blogService.deleteBlogsTesting()
+    await this.userService.deleteUsersTesting()
     await this.blogService.deleteBannedUsersTesting()
 
     return res.sendStatus(HttpStatusCode.NO_CONTENT_204)  

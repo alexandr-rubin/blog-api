@@ -1,13 +1,13 @@
 import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 import { UserQueryRepository } from '../users/user.query-repository';
-import { UserDocument } from '../users/models/schemas/User';
+import { SQLUser } from 'src/users/models/view/SQLUserView';
 
 @ValidatorConstraint({ async: true })
 export class EmailConfirmationCodeValidator implements ValidatorConstraintInterface {
   constructor(private readonly userQueryRepository: UserQueryRepository) {}
 
   async validate(data: {code?: string, email?: string}) {
-    let user: UserDocument
+    let user: SQLUser
     if(data.code) {
       user = await this.userQueryRepository.findUserByConfirmationEmailCode(data.code)
     }

@@ -15,8 +15,8 @@ export class UserService {
     const user = await this.userRepository.createUser(newUser)
     //
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { confirmationEmail, confirmationPassword, password,__v, _id, role, ...result} = {id: user._id.toString(), ...user, 
-      banInfo: {isBanned: user.banInfo.isBanned, banDate: user.banInfo.banDate, banReason: user.banInfo.banReason}}
+    const { confirmationEmail, confirmationPassword, password, banInfo, role, ...result} = {id: 'zxc', ...newUser, 
+      /*banInfo: {isBanned: user.banInfo.isBanned, banDate: user.banInfo.banDate, banReason: user.banInfo.banReason}*/}
     return result
   }
   //

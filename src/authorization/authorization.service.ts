@@ -96,7 +96,7 @@ export class AuthorizationService {
       try {
         const isMatch = await compare(loginData.password, user.password)
         if(isMatch){
-          return user._id.toString()
+          return user.id.toString()
         }
         throw new UnauthorizedException()
       } catch (error) {
@@ -116,7 +116,7 @@ export class AuthorizationService {
     const refreshTokenPayload = { deviceId: deviceId, userId: userId, issuedAt: issuedAt }
     const result = {
       accessToken: await this.jwtService.signAsync(accessTokenPayload),
-      refreshToken: await this.jwtService.signAsync(refreshTokenPayload, { expiresIn: '20s' })
+      refreshToken: await this.jwtService.signAsync(refreshTokenPayload, { expiresIn: '20m' })
     }
     return result
   }

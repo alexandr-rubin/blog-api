@@ -7,7 +7,6 @@ export class PasswordRecoveryCodeExistValidator implements ValidatorConstraintIn
 
   async validate(code: string) {
     const user = await this.userQueryRepository.findUserByConfirmationPasswordCode(code)
-
     if (!user)
       return false
     if(new Date(user.confirmationPassword.expirationDate) < new Date())
