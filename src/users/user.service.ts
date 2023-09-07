@@ -12,10 +12,10 @@ export class UserService {
   async createUser(userDto: UserInputModel): Promise<UserViewModel> {
     const newUser: User = await User.createUser(userDto, true, UserRoles.Admin)
 
-    const user = await this.userRepository.createUser(newUser)
+    const id = await this.userRepository.createUser(newUser)
     //
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { confirmationEmail, confirmationPassword, password, banInfo, role, ...result} = {id: 'zxc', ...newUser, 
+    const { confirmationEmail, confirmationPassword, password, banInfo, role, ...result} = {id: id, ...newUser, 
       /*banInfo: {isBanned: user.banInfo.isBanned, banDate: user.banInfo.banDate, banReason: user.banInfo.banReason}*/}
     return result
   }

@@ -25,9 +25,9 @@ export class UsersController {
   }
 
   @HttpCode(HttpStatusCode.NO_CONTENT_204)
-  @Delete(':id')
-  async deleteUserById(@Param('id', UserIdValidationPipe) id: string) {
-    return await this.userService.deleteUserById(id) 
+  @Delete(':userId')
+  async deleteUserById(@Param('userId', UserIdValidationPipe) userId: string) {
+    return await this.userService.deleteUserById(userId) 
   }
 
   @HttpCode(HttpStatusCode.NO_CONTENT_204)

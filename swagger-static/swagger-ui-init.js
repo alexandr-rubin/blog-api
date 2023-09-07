@@ -373,12 +373,12 @@ window.onload = function() {
           }
         }
       },
-      "/sa/users/{id}": {
+      "/sa/users/{userId}": {
         "delete": {
           "operationId": "UsersController_deleteUserById",
           "parameters": [
             {
-              "name": "id",
+              "name": "userId",
               "required": true,
               "in": "path",
               "schema": {

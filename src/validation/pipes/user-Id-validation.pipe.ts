@@ -8,9 +8,9 @@ export class UserIdValidationPipe implements PipeTransform {
   async transform(value: any, metadata: ArgumentMetadata) {
     const { type, data } = metadata;
     if (type === 'param' && data === 'userId') {
-      const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(value);
-      if (!isValidObjectId) {
-        throw new BadRequestException(`Invalid ${data}. It should be a valid ObjectId.`);
+      const isValidUUIDv4 = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(value)
+      if (!isValidUUIDv4) {
+        throw new BadRequestException(`Invalid ${data}. It should be a valid uuid.`);
       }
 
       const isValid = await this.userIdExistValidator.validate(value);

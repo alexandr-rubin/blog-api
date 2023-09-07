@@ -15,12 +15,13 @@ export class UserRepository {
     // const user = new this.userModel(newUser)
     // const save = (await user.save()).toJSON()
     // return save
-    return await this.dataSource.query(`
+    const user = await this.dataSource.query(`
     INSERT INTO public."Users"(
       id, login, password, email, "createdAt", "confirmationEmail", "confirmationPassword", role, "banInfo")
     VALUES (
       uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7, $8
-    )`,
+    )
+    RETURNING id`,
     [
       newUser.login,
       newUser.password,
@@ -31,6 +32,8 @@ export class UserRepository {
       newUser.role,
       newUser.banInfo
     ]);
+
+    return user[0].id
   }
 
   async deleteUserById(id: string) {
