@@ -34,10 +34,11 @@ export class UserRepository {
   }
 
   async deleteUserById(id: string) {
-    return await this.dataSource.query(`
+    const user = await this.dataSource.query(`
     DELETE FROM public."Users"
     WHERE id = $1
     `, [id])
+    return user[0]
     // const result = await this.userModel.findByIdAndDelete(id)
     // return !!result
   }
