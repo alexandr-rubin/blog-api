@@ -16,8 +16,9 @@ import { UserInputModel } from "../users/models/input/UserInput";
 import { Roles } from "../decorators/roles.decorator";
 import { UserRoles } from "../helpers/userRoles";
 import { RolesGuard } from "../guards/roles.guard";
+import { LogAPIThrottlerGuard } from "src/guards/logAPIThrottlerGuard";
 
-// @UseGuards(LogAPIThrottlerGuard)
+@UseGuards(LogAPIThrottlerGuard)
 //role
 @UseGuards(RolesGuard)
 @Roles(UserRoles.Guest)
