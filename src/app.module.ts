@@ -110,27 +110,27 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       signOptions: { expiresIn: '10m' },
     }),
 
-    // TypeOrmModule.forRoot({
-    //   type: 'postgres',
-    //   host: 'trumpet.db.elephantsql.com',
-    //   port: 5432,
-    //   username: 'fhxncxpi',
-    //   password: '5fZdB3liCU9oQPAvbl_ARx9hqpZiAXg2',
-    //   database: 'fhxncxpi',
-    //   autoLoadEntities: false,
-    //   synchronize: false,
-    // }),
-
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
+      host: 'trumpet.db.elephantsql.com',
       port: 5432,
-      username: 'admin',
-      password: 'admin',
-      database: 'incubatorTypeorm',
+      username: 'fhxncxpi',
+      password: '5fZdB3liCU9oQPAvbl_ARx9hqpZiAXg2',
+      database: 'fhxncxpi',
       autoLoadEntities: false,
       synchronize: false,
     }),
+
+    // TypeOrmModule.forRoot({
+    //   type: 'postgres',
+    //   host: 'localhost',
+    //   port: 5432,
+    //   username: 'admin',
+    //   password: 'admin',
+    //   database: 'incubatorTypeorm',
+    //   autoLoadEntities: false,
+    //   synchronize: false,
+    // }),
 
     MongooseModule.forRootAsync({
       imports: [ConfigModule], // Импортируйте ConfigModule
