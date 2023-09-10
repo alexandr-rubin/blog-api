@@ -84,7 +84,7 @@ export class PostQueryRepository {
 
     const rest = {...post[0], extendedLikesInfo: {likesCount: likesCount, dislikesCount: dislikesCount, 
     myStatus: likeStatus, newestLikes: newestLikes }, likesAndDislikesCount: undefined, likesAndDislikes: undefined}
-    
+
     return rest
   }
 
@@ -183,7 +183,7 @@ export class PostQueryRepository {
       WHERE "blogId" = $1
     `,[blogId])
     const transformedPosts = posts.map(({ ...rest }) => ({ id: rest.id, ...rest }))
-    const result = Paginator.createPaginationResult(count[0].count, query, transformedPosts)
+    const result = Paginator.createPaginationResult(+count[0].count, query, transformedPosts)
     return this.editPostToViewModel(result, userId, bannedUserIds)
   }
   

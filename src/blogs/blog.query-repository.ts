@@ -24,8 +24,12 @@ export class BlogQueryRepository {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     // const transformedBlogs = blogs.filter(blog => !blog.banInfo.isBanned).map(({ userId, banInfo, ...rest }) => ({ id: rest.id, ...rest }))
 
-    const count = blogs.length
-    const result = Paginator.createPaginationResult(count, query, blogs)
+    //const count = trans blogs?????????????? blogs.length
+    const count = await this.dataSource.query(`
+      SELECT COUNT(*) FROM public."Blogs" b
+      WHERE (COALESCE(b."name" ILIKE $1, true))
+    `,[query.searchNameTerm ? `%${query.searchNameTerm}%` : null])
+    const result = Paginator.createPaginationResult(+count[0].count, query, blogs)
     
     return result
   }
