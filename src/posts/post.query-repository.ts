@@ -49,7 +49,7 @@ export class PostQueryRepository {
       const id = rest.id
       return { id, ...rest }
     })
-    const result = Paginator.createPaginationResult(count[0].count, query, transformedPosts)
+    const result = Paginator.createPaginationResult(+count[0].count, query, transformedPosts)
 
     return await this.editPostToViewModel(result, userId, bannedUserIds)
   }
