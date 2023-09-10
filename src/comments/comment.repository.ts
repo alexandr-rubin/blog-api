@@ -3,10 +3,12 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { CommentInputModel } from "./models/input/CommentInputModel";
 import { Comment, CommentDocument } from "./models/schemas/Comment";
+import { InjectDataSource } from "@nestjs/typeorm";
+import { DataSource } from "typeorm";
 
 @Injectable()
 export class CommentRepository {
-  constructor(@InjectModel(Comment.name) private commentModel: Model<CommentDocument>){}
+  constructor(@InjectModel(Comment.name) private commentModel: Model<CommentDocument>, @InjectDataSource() protected dataSource: DataSource){}
 
   async deleteCommentById(id: string): Promise<boolean> {
     const result = await this.commentModel.findByIdAndDelete(id)
@@ -19,8 +21,11 @@ export class CommentRepository {
   }
 
   async deleteCommentTesting(): Promise<boolean> {
-    const result = await this.commentModel.deleteMany({})
-    return !!result
+    // const result = await this.commentModel.deleteMany({})
+    // return !!result
+    return await this.dataSource.query(`
+    DELETE FROM public."Comments"
+    `)
   }
 
   async incLike(commentId: string){

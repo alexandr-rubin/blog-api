@@ -9,6 +9,7 @@ import { PostInputModel } from "./models/input/Post";
 import { PostViewModel } from "./models/view/Post";
 import { Post } from "./models/schemas/Post";
 import { PostForSpecBlogInputModel } from "./models/input/PostForSpecBlog";
+import { SQLPostViewModel } from "./models/view/SQLPost";
 
 @Injectable()
 export class PostService {///////////
@@ -42,7 +43,7 @@ export class PostService {///////////
 
   async updatePostById(postId: string, newPost: PostForSpecBlogInputModel, blogId: string): Promise<Post> {
     // вынести из квери репо поиск документа?
-    const post = await this.postQueryRepository.getPostgByIdNoView(postId)
+    const post: SQLPostViewModel = await this.postQueryRepository.getPostgByIdNoView(postId)
     if(post.blogId !== blogId){
       throw new ForbiddenException('Incorrect blog id')
     }
@@ -71,13 +72,13 @@ export class PostService {///////////
     const comment: Comment = {content: content, commentatorInfo: {userId: userId, userLogin: userLogin}, createdAt: new Date().toISOString(), postId: pId,
     likesAndDislikesCount: {likesCount: 0, dislikesCount: 0}, likesAndDislikes: []}
 
-    const savedComment = (await this.postRepository.createComment(comment)).toJSON()
+    const commentId = await this.postRepository.createComment(comment)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {postId, _id, __v, likesAndDislikesCount, likesAndDislikes, ...result} = 
-    ({id: savedComment._id, ...savedComment, commentatorInfo: 
-    {userId: savedComment.commentatorInfo.userId, userLogin: savedComment.commentatorInfo.userLogin}, 
-    likesInfo: {likesCount: savedComment.likesAndDislikesCount.likesCount, 
-    dislikesCount: savedComment.likesAndDislikesCount.dislikesCount , myStatus: LikeStatuses.None}})
+    const {postId, likesAndDislikesCount, likesAndDislikes, ...result} = 
+    ({id: commentId, ...comment, commentatorInfo: 
+    {userId: comment.commentatorInfo.userId, userLogin: comment.commentatorInfo.userLogin}, 
+    likesInfo: {likesCount: comment.likesAndDislikesCount.likesCount, 
+    dislikesCount: comment.likesAndDislikesCount.dislikesCount , myStatus: LikeStatuses.None}})
 
     return result
   }

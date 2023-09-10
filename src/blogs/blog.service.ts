@@ -16,9 +16,9 @@ export class BlogService {
 
   async addBlog(blog: BlogInputModel, creatorId: string): Promise<BlogViewModel>{
     const newBlog: Blog = {...blog, createdAt: new Date().toISOString(), isMembership: false, userId: creatorId, banInfo: {isBanned: false, banDate: null}}
-    const savedBlog = (await this.blogRepository.addBlog(newBlog)).toJSON()
+    const id = await this.blogRepository.addBlog(newBlog)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { __v, _id, userId, banInfo, ...result } = {id: savedBlog._id.toString(), ...savedBlog}
+    const { userId, banInfo, ...result } = {id: id.toString(), ...newBlog}
     return result
   }
 
@@ -32,9 +32,9 @@ export class BlogService {
     }
     const newPost: Post = {...post, blogId: blogId, blogName: blog.name, createdAt: new Date().toISOString(),
     likesAndDislikesCount: { likesCount: 0, dislikesCount: 0}, likesAndDislikes: [] }
-    const save = await this.blogRepository.addPostForSpecificBlog(newPost)
+    const id = await this.blogRepository.addPostForSpecificBlog(newPost)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { __v, _id, likesAndDislikesCount, likesAndDislikes, ...result } = {id: save._id.toString(), ...save, extendedLikesInfo: { likesCount: 0, dislikesCount: 0, myStatus: 'None', newestLikes: [/*{ addedAt: '', login: '', userId: ''}*/]}}
+    const { likesAndDislikesCount, likesAndDislikes, ...result } = {id: id.toString(), ...newPost, extendedLikesInfo: { likesCount: 0, dislikesCount: 0, myStatus: 'None', newestLikes: [/*{ addedAt: '', login: '', userId: ''}*/]}}
     return result
   }
 

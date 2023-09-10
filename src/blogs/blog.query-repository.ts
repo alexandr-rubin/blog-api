@@ -8,20 +8,24 @@ import { BlogViewModel } from "./models/view/BlogViewModel";
 import { Blog, BlogDocument } from "./models/schemas/Blog";
 import { BlogAdminViewModel } from "./models/view/BlogAdminViewModel";
 import { BlogBannedUsers, BlogBannedUsersDocument } from "./models/schemas/BlogBannedUsers";
+import { DataSource } from "typeorm";
+import { InjectDataSource } from "@nestjs/typeorm";
+import { SQLBlog } from "./models/view/SQLBlogViewModel";
 
 @Injectable()
 export class BlogQueryRepository {
-  constructor(@InjectModel(Blog.name) private blogModel: Model<BlogDocument>, @InjectModel(BlogBannedUsers.name) private blogBannedUsersModel: Model<BlogBannedUsersDocument>){}
+  constructor(@InjectModel(Blog.name) private blogModel: Model<BlogDocument>, @InjectModel(BlogBannedUsers.name) private blogBannedUsersModel: Model<BlogBannedUsersDocument>,
+  @InjectDataSource() protected dataSource: DataSource){}
   async getBlogs(params: QueryParamsModel, userId: string | null): Promise<Paginator<BlogViewModel>> {
     const query = createPaginationQuery(params)
     const blogs = await this.getBlogsWithFilter(query, userId)
     
-    //
+    // раскомментить когда верну баны
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const transformedBlogs = blogs.filter(blog => !blog.banInfo.isBanned).map(({ _id, userId, banInfo, ...rest }) => ({ id: _id.toString(), ...rest }))
+    // const transformedBlogs = blogs.filter(blog => !blog.banInfo.isBanned).map(({ userId, banInfo, ...rest }) => ({ id: rest.id, ...rest }))
 
-    const count = transformedBlogs.length
-    const result = Paginator.createPaginationResult(count, query, transformedBlogs)
+    const count = blogs.length
+    const result = Paginator.createPaginationResult(count, query, blogs)
     
     return result
   }
@@ -35,36 +39,52 @@ export class BlogQueryRepository {
     return blogIdArray
   }
 
-  async getSuperAdminBlogs(params: QueryParamsModel): Promise<Paginator<BlogAdminViewModel>> {
+  async getSuperAdminBlogs(params: QueryParamsModel)/*: Promise<Paginator<BlogAdminViewModel>>*/ {
     const query = createPaginationQuery(params)
     const blogs = await this.getBlogsWithFilter(query, null)
-    const filter = this.generateFilter(query, null)
-    const count = await this.blogModel.countDocuments(filter)
+    const count = await this.dataSource.query(`
+      SELECT COUNT(*) FROM public."Blogs" b
+      WHERE (COALESCE(b."name" ILIKE $1, true))
+    `,[query.searchNameTerm ? `%${query.searchNameTerm}%` : null])
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const transformedBlogs = blogs.map(({ _id, userId, ...rest }) => ({ id: _id.toString(), ...rest, blogOwnerInfo: {userId: userId, userLogin: null}, 
-    banInfo: {isBanned: rest.banInfo.isBanned, banDate: rest.banInfo.banDate} }))
-    const result = Paginator.createPaginationResult(count, query, transformedBlogs)
+    // const transformedBlogs = blogs.map(({ userId, ...rest }) => ({ id: rest.id, ...rest, blogOwnerInfo: {userId: userId, userLogin: null}, 
+    // banInfo: {isBanned: rest.banInfo.isBanned, banDate: rest.banInfo.banDate} }))
+    const transformedBlogs = blogs.map(({ userId, ...rest }) => ({ id: rest.id, ...rest}))
+    const result = Paginator.createPaginationResult(+count[0].count, query, transformedBlogs)
     return result
   }
 
   async getBlogById(blogId: string): Promise<BlogViewModel> {
-    const blog = await this.blogModel.findById(blogId, { __v: false, userId: false })
-    if (!blog || blog.banInfo.isBanned){
+    // const blog = await this.blogModel.findById(blogId, { __v: false, userId: false })
+    const blog: SQLBlog = await this.dataSource.query(`
+    SELECT * FROM public."Blogs"
+    WHERE id = $1
+    `, [blogId])
+
+    if (!blog[0] /*|| blog[0].banInfo.isBanned*/){
       throw new NotFoundException()
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { _id, banInfo, ...rest } = blog.toJSON()
+    const { userId, banInfo, ...rest } = blog[0]
     const id = rest.id
     return { id, ...rest }
   }
 
   async getBlogByIdNoView(blogId: string): Promise<Blog | null> {
     // to json?
-    const blog = await this.blogModel.findById(blogId, { __v: false })
-    if (!blog){
+    // const blog = await this.blogModel.findById(blogId, { __v: false })
+    // if (!blog){
+    //   return null
+    // }
+    // return blog
+    const blog: SQLBlog = await this.dataSource.query(`
+    SELECT * FROM public."Blogs"
+    WHERE id = $1
+    `, [blogId])
+    if(!blog[0]){
       return null
     }
-    return blog
+    return blog[0]
   }
 
   async getBannedBlogsId(): Promise<string[]> {
@@ -148,23 +168,26 @@ export class BlogQueryRepository {
   }
 
   // add filter to params
-  private async getBlogsWithFilter(query: QueryParamsModel, userId: string | null){
-    const filter = this.generateFilter(query, userId)
+  private async getBlogsWithFilter(query: QueryParamsModel, userId: string | null): Promise<SQLBlog[]>{
     const skip = (query.pageNumber - 1) * query.pageSize
-    //
-    const blogs = await this.blogModel.find(filter, { __v: false })
-    .sort({[query.sortBy]: query.sortDirection === 'asc' ? 1 : -1})
-    .skip(skip).limit(query.pageSize).lean()
+    const filter: any = userId === null ? `WHERE (COALESCE(b."name" ILIKE $1, true))` : `WHERE (COALESCE(b."name" ILIKE $1, true)) AND "userId" = ${userId}`
+    const blogs: SQLBlog[] = await this.dataSource.query(`
+    SELECT id, name, description, "websiteUrl", "createdAt", "isMembership" FROM public."Blogs" b   
+    ${filter}
+    ORDER BY b."${query.sortBy}" COLLATE "C" ${query.sortDirection}
+    OFFSET $2
+    LIMIT $3
+    `, [query.searchNameTerm ? `%${query.searchNameTerm}%` : null, skip, query.pageSize])
 
     return blogs
   }
 
-  private generateFilter(query: QueryParamsModel, userId: string | null) {
-    const filter: any = userId === null ? {} : {userId: userId}
-    if (query.searchNameTerm !== null) {
-      filter.name = { $regex: query.searchNameTerm, $options: 'i' }
-    }
+  // private generateUserIdFilter(query: QueryParamsModel, userId: string | null) {
+  //   const filter: any = userId === null ? `WHERE (COALESCE(b."name" ILIKE $1, true))` : `WHERE (COALESCE(b."name" ILIKE $1, true)) AND "userId" = ${userId}`
+  //   if (query.searchNameTerm !== null) {
+  //     filter.name = { $regex: query.searchNameTerm, $options: 'i' }
+  //   }
 
-    return filter
-  }
+  //   return filter
+  // }
 }

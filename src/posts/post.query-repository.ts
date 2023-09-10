@@ -11,72 +11,84 @@ import { Comment, CommentDocument } from "../comments/models/schemas/Comment";
 import { PostViewModel } from "./models/view/Post";
 import { PostDocument, Post, PostLike } from "./models/schemas/Post";
 import { CommentLike } from "../comments/models/schemas/CommentLike";
+import { DataSource } from "typeorm";
+import { InjectDataSource } from "@nestjs/typeorm";
+import { SQLPostViewModel } from "./models/view/SQLPost";
 
 @Injectable()
 export class PostQueryRepository {
-  constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>, @InjectModel(Comment.name) private commentModel: Model<CommentDocument>){}
+  constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>, @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
+  @InjectDataSource() protected dataSource: DataSource){}
   async getPosts(params: QueryParamsModel, userId: string, bannedUserIds: string[], bannedBlogsIds: string[]): Promise<Paginator<PostViewModel>> {
     // fix
     const query = createPaginationQuery(params)
     const skip = (query.pageNumber - 1) * query.pageSize
-    // const posts = await this.postModel.find(query.searchNameTerm === null ? {} : {name: {$regex: query.searchNameTerm, $options: 'i'}}, {__v: false})
-    // .sort({[query.sortBy]: query.sortDirection === 'asc' ? 1 : -1})
-    // .skip(skip).limit(query.pageSize).lean()
-    const filter = {
-      $and: [
-        query.searchNameTerm === null ? {} : { name: { $regex: query.searchNameTerm, $options: 'i' } },
-        { blogId: { $nin: bannedBlogsIds } }
-      ]
-    }
-    const posts = await this.postModel
-    .find(filter, { __v: false })
-    .sort({ [query.sortBy]: query.sortDirection === 'asc' ? 1 : -1 })
-    .skip(skip).limit(query.pageSize)
-    .lean();
-    const count = await this.postModel.countDocuments(filter)
+    // const filter = {
+    //   $and: [
+    //     query.searchNameTerm === null ? {} : { name: { $regex: query.searchNameTerm, $options: 'i' } },
+    //     { blogId: { $nin: bannedBlogsIds } }
+    //   ]
+    // }
+    // const posts = await this.postModel
+    // .find(filter, { __v: false })
+    // .sort({ [query.sortBy]: query.sortDirection === 'asc' ? 1 : -1 })
+    // .skip(skip).limit(query.pageSize)
+    // .lean();
+    // const count = await this.postModel.countDocuments(filter)
     //
+    const posts: SQLPostViewModel[] = await this.dataSource.query(`
+    SELECT * FROM public."Posts" p
+    ORDER BY p."${query.sortBy}" COLLATE "C" ${query.sortDirection}
+    OFFSET $1
+    LIMIT $2
+    `, [skip, query.pageSize])
+    const count = await this.dataSource.query(`
+      SELECT COUNT(*) FROM public."Posts"`)
     const transformedPosts = posts.map((post) => {
-      const { _id, ...rest } = post
-      const id = _id.toString()
+      const {...rest } = post
+      const id = rest.id
       return { id, ...rest }
     })
-    const result = Paginator.createPaginationResult(count, query, transformedPosts)
+    const result = Paginator.createPaginationResult(count[0].count, query, transformedPosts)
 
     return await this.editPostToViewModel(result, userId, bannedUserIds)
   }
 
   async getPostgById(postId: string, userId: string, bannedUserIds: string[], bannedBlogsIds: string[]): Promise<PostViewModel | null> {
-    const post = await this.postModel
-    .findOne({
-      _id: postId,
-      blogId: { $nin: bannedBlogsIds }
-    }, { __v: false })
-    if(!post){
+    // const post = await this.postModel
+    // .findOne({
+    //   _id: postId,
+    //   blogId: { $nin: bannedBlogsIds }
+    // }, { __v: false })
+    const post: SQLPostViewModel = await this.dataSource.query(`
+    SELECT * FROM public."Posts"
+    WHERE id = $1
+    `, [postId])
+    if(!post[0]){
       throw new NotFoundException()
     }
-    const like = post.likesAndDislikes.find(like => like.userId === userId && !bannedUserIds.includes(like.userId))
+    const like = post[0].likesAndDislikes.find(like => like.userId === userId && !bannedUserIds.includes(like.userId))
     const likeStatus = like === undefined ? LikeStatuses.None : like.likeStatus
-    const objPost = post.toJSON()
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     //const newestLikes = post.likesAndDislikes.filter((element) => element.likeStatus === 'Like').slice(-3).map((element) => element).map(({ likeStatus, ...rest }) => rest)
-    const newestLikes = post.likesAndDislikes
+    const newestLikes = post[0].likesAndDislikes
     .filter((element) => element.likeStatus === 'Like' && !bannedUserIds.includes(element.userId))
     .slice(-3)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     .map(({ likeStatus, ...rest }) => rest)
     .sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime())
 
-    const filteredLikesAndDislikes = this.filterLikesAndDislikes(post.likesAndDislikes, bannedUserIds)
+    const filteredLikesAndDislikes = this.filterLikesAndDislikes(post[0].likesAndDislikes, bannedUserIds)
     const likesCount = filteredLikesAndDislikes.likesCount
     const dislikesCount = filteredLikesAndDislikes.dislikesCount
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { _id, likesAndDislikesCount, likesAndDislikes, ...rest } = {...objPost, extendedLikesInfo: {likesCount: likesCount, dislikesCount: dislikesCount, 
-    myStatus: likeStatus, newestLikes: newestLikes }}
-    const id = _id.toString()
-    return { id, ...rest }
+
+    const rest = {...post[0], extendedLikesInfo: {likesCount: likesCount, dislikesCount: dislikesCount, 
+    myStatus: likeStatus, newestLikes: newestLikes }, likesAndDislikesCount: undefined, likesAndDislikes: undefined}
+    
+    return rest
   }
 
-  public async editPostToViewModel(post: Paginator<Post>, userId: string, bannedUserIds: string[]): Promise<Paginator<PostViewModel>>  {
+  public async editPostToViewModel(post: Paginator<SQLPostViewModel>, userId: string, bannedUserIds: string[]): Promise<Paginator<PostViewModel>>  {
     const newArray: Paginator<PostViewModel> = {
       ...post,
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -136,32 +148,45 @@ export class PostQueryRepository {
   }
 
   // query repo shouldnt return document
-  async getPostgByIdNoView(postId: string): Promise<PostDocument | null> {
-    const post = await this.postModel.findById(postId)
-    if(!post){
+  async getPostgByIdNoView(postId: string): Promise<SQLPostViewModel | null> {
+    // const post = await this.postModel.findById(postId)
+    // if(!post){
+    //   return null
+    // }
+    // return post
+    const post: SQLPostViewModel = await this.dataSource.query(`
+    SELECT * FROM public."Posts"
+    WHERE id = $1
+    `, [postId])
+    if(!post[0]){
       return null
     }
-    return post
+    return post[0]
   }
 
   async getPostsForSpecifiedBlog(blogId: string, params: QueryParamsModel, userId: string | null, bannedUserIds: string[]): Promise<Paginator<PostViewModel>>{
     const query = createPaginationQuery(params)
-    const filter: any = {blogId: blogId}
-
-    if (query.searchNameTerm !== null) {
-      filter.name = { $regex: query.searchNameTerm, $options: 'i' }
-    }
-    
     const skip = (query.pageNumber - 1) * query.pageSize
-    const posts = await this.postModel.find(filter, {__v: false})
-    .sort({[query.sortBy]: query.sortDirection === 'asc' ? 1 : -1})
-    .skip(skip)
-    .limit(query.pageSize).lean()
-    const count = await this.postModel.countDocuments(filter)
-    const transformedPosts = posts.map(({ _id, ...rest }) => ({ id: _id.toString(), ...rest }))
-    const result = Paginator.createPaginationResult(count, query, transformedPosts)
+    // const posts = await this.postModel.find(filter, {__v: false})
+    // .sort({[query.sortBy]: query.sortDirection === 'asc' ? 1 : -1})
+    // .skip(skip)
+    // .limit(query.pageSize).lean()
+    const posts: SQLPostViewModel[] = await this.dataSource.query(`
+    SELECT * FROM public."Posts" p
+    WHERE "blogId" = $1
+    ORDER BY p."${query.sortBy}" COLLATE "C" ${query.sortDirection}
+    OFFSET $2
+    LIMIT $3
+    `, [blogId, skip, query.pageSize])
+    const count = await this.dataSource.query(`
+      SELECT COUNT(*) FROM public."Posts" p
+      WHERE "blogId" = $1
+    `,[blogId])
+    const transformedPosts = posts.map(({ ...rest }) => ({ id: rest.id, ...rest }))
+    const result = Paginator.createPaginationResult(count[0].count, query, transformedPosts)
     return this.editPostToViewModel(result, userId, bannedUserIds)
   }
+  
   async getCommentsForBlogs(params: QueryParamsModel, blogIdArray: string[], userId: string, bannedUserIds: string[]): Promise<Paginator<CommentViewModel>> {
     const postsArray = await this.getPostssForBlogs(blogIdArray)
     const postIdArray = postsArray.map(({...post}) => (post._id.toString()))
