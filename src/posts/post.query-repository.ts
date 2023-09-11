@@ -133,12 +133,12 @@ export class PostQueryRepository {
   }
 
   async getPostLikesAndDislikesById(postId: string){
-    const likesAndDislokes = await this.dataSource.query(`
+    const likesAndDislikes = await this.dataSource.query(`
       SELECT "userId", login, "addedAt", "likeStatus" FROM public."PostLikesAndDislikes"
       WHERE "postId" = $1
     `, [postId])
 
-    return likesAndDislokes
+    return likesAndDislikes
   }
   
   async getCommentsForSpecifiedPost(postId: string, params: QueryParamsModel, userId: string, bannedUserIds: string[]): Promise<Paginator<CommentViewModel> | null>{
