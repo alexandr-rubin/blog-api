@@ -3,11 +3,11 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { BlogInputModel } from "./models/input/BlogInputModel";
 import { Blog, BlogDocument } from "./models/schemas/Blog";
-import { Post } from "../posts/models/schemas/Post";
 import { BlogBannedUsers, BlogBannedUsersDocument } from "./models/schemas/BlogBannedUsers";
 import { InjectDataSource } from "@nestjs/typeorm";
 import { DataSource } from "typeorm";
 import { UUID } from "crypto";
+import { SQLPostInputModel } from "../posts/models/input/SQLPost";
 
 @Injectable()
 export class BlogRepository {
@@ -38,14 +38,14 @@ export class BlogRepository {
     return newBlog[0].id
   }
 
-  async addPostForSpecificBlog(post: Post): Promise<UUID>{
+  async addPostForSpecificBlog(post: SQLPostInputModel): Promise<UUID>{
     //
     // const newPost = await this.postRepository.addPost(post)
     // return newPost
     const newPost = await this.dataSource.query(`
     INSERT INTO public."Posts"(
-      id, title, "shortDescription", content, "blogId", "blogName", "createdAt", "likesAndDislikesCount", "likesAndDislikes")
-      VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7, $8)
+      id, title, "shortDescription", content, "blogId", "blogName", "createdAt", "likesAndDislikesCount")
+      VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7)
       RETURNING id
     `,
     [
@@ -55,8 +55,7 @@ export class BlogRepository {
       post.blogId,
       post.blogName,
       post.createdAt,
-      post.likesAndDislikesCount,
-      post.likesAndDislikes
+      post.likesAndDislikesCount
     ])
 
     return newPost[0].id

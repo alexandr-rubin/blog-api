@@ -6,9 +6,9 @@ import { BlogViewModel } from "./models/view/BlogViewModel";
 import { Blog } from "./models/schemas/Blog";
 import { PostForSpecBlogInputModel } from "../posts/models/input/PostForSpecBlog";
 import { PostViewModel } from "../posts/models/view/Post";
-import { Post } from "../posts/models/schemas/Post";
 import { BanUserForBlogInputModel } from "./models/input/BanUserForBlogInputModel";
 import { BlogBannedUsers } from "./models/schemas/BlogBannedUsers";
+import { SQLPostInputModel } from "../posts/models/input/SQLPost";
 
 @Injectable()
 export class BlogService {
@@ -30,11 +30,11 @@ export class BlogService {
     if(blog.userId !== userId){
       throw new ForbiddenException()
     }
-    const newPost: Post = {...post, blogId: blogId, blogName: blog.name, createdAt: new Date().toISOString(),
-    likesAndDislikesCount: { likesCount: 0, dislikesCount: 0}, likesAndDislikes: [] }
+    const newPost: SQLPostInputModel = {...post, blogId: blogId, blogName: blog.name, createdAt: new Date().toISOString(),
+    likesAndDislikesCount: { likesCount: 0, dislikesCount: 0}}
     const id = await this.blogRepository.addPostForSpecificBlog(newPost)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { likesAndDislikesCount, likesAndDislikes, ...result } = {id: id.toString(), ...newPost, extendedLikesInfo: { likesCount: 0, dislikesCount: 0, myStatus: 'None', newestLikes: [/*{ addedAt: '', login: '', userId: ''}*/]}}
+    const { likesAndDislikesCount, ...result } = {id: id.toString(), ...newPost, extendedLikesInfo: { likesCount: 0, dislikesCount: 0, myStatus: 'None', newestLikes: [/*{ addedAt: '', login: '', userId: ''}*/]}}
     return result
   }
 

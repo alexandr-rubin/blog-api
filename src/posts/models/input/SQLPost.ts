@@ -1,7 +1,4 @@
-import { UUID } from "crypto"
-
-export class SQLPostViewModel {
-  id!: UUID
+export class SQLPostInputModel {
   title!: string
   shortDescription!: string
   content!: string

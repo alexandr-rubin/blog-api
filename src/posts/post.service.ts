@@ -4,12 +4,12 @@ import { LikeStatuses } from "../helpers/likeStatuses";
 import { BlogQueryRepository } from "../blogs/blog.query-repository";
 import { PostQueryRepository } from "./post.query-repository";
 import { CommentViewModel } from "../comments/models/view/CommentViewModel";
-import { Comment } from "src/comments/models/schemas/Comment";
 import { PostInputModel } from "./models/input/Post";
 import { PostViewModel } from "./models/view/Post";
 import { Post } from "./models/schemas/Post";
 import { PostForSpecBlogInputModel } from "./models/input/PostForSpecBlog";
 import { SQLPostViewModel } from "./models/view/SQLPost";
+import { SQLCommentInputModel } from "../comments/models/input/SQLCommentInputModel";
 
 @Injectable()
 export class PostService {///////////
@@ -69,12 +69,12 @@ export class PostService {///////////
       throw new ForbiddenException()
     }
     // у сблога список бан. если там есть юзер id то ошибка
-    const comment: Comment = {content: content, commentatorInfo: {userId: userId, userLogin: userLogin}, createdAt: new Date().toISOString(), postId: pId,
-    likesAndDislikesCount: {likesCount: 0, dislikesCount: 0}, likesAndDislikes: []}
+    const comment: SQLCommentInputModel = {content: content, commentatorInfo: {userId: userId, userLogin: userLogin}, createdAt: new Date().toISOString(), postId: pId,
+    likesAndDislikesCount: {likesCount: 0, dislikesCount: 0}}
 
     const commentId = await this.postRepository.createComment(comment)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {postId, likesAndDislikesCount, likesAndDislikes, ...result} = 
+    const {postId, likesAndDislikesCount, ...result} = 
     ({id: commentId, ...comment, commentatorInfo: 
     {userId: comment.commentatorInfo.userId, userLogin: comment.commentatorInfo.userLogin}, 
     likesInfo: {likesCount: comment.likesAndDislikesCount.likesCount, 

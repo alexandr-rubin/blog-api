@@ -4,10 +4,14 @@ import { Model } from "mongoose";
 import { LikeStatuses } from "../helpers/likeStatuses";
 import { Comment, CommentDocument } from "./models/schemas/Comment";
 import { CommentViewModel } from "./models/view/CommentViewModel";
+import { SQLComment } from "./models/view/SQLCommentViewModel";
+import { InjectDataSource } from "@nestjs/typeorm";
+import { DataSource } from "typeorm";
+import { UUID } from "crypto";
 
 @Injectable()
 export class CommentQueryRepository {
-  constructor(@InjectModel(Comment.name) private commentModel: Model<CommentDocument>){}
+  constructor(@InjectModel(Comment.name) private commentModel: Model<CommentDocument>, @InjectDataSource() protected dataSource: DataSource){}
 
   async getCommentById(commentId: string, userId: string, bannedUserIds: string[]): Promise<CommentViewModel> {
     const comment = await this.commentModel.findById(commentId, { __v: false, postId: false }).lean()
@@ -29,11 +33,29 @@ export class CommentQueryRepository {
     const id = _id.toString()
     return { id, ...rest }
   }
-  async getCommentByIdNoView(commentId: string): Promise<CommentDocument | null> {
-    const comment = await this.commentModel.findById(commentId)
-    if (!comment){
+
+  async getCommentByIdNoView(commentId: string): Promise<SQLComment | null> {
+    // const comment = await this.commentModel.findById(commentId)
+    // if (!comment){
+    //   return null
+    // }
+    // return comment
+    const comment: SQLComment = await this.dataSource.query(`
+    SELECT * FROM public."Comments"
+    WHERE id = $1
+    `, [commentId])
+    if(!comment[0]){
       return null
     }
-    return comment
+    return comment[0]
+  }
+
+  async getCommentLikesAndDislikesById(commentId: UUID){
+    const likesAndDislokes = await this.dataSource.query(`
+      SELECT "userId", "addedAt", "likeStatus" FROM public."CommentLikesAndDislikes"
+      WHERE "commentId" = $1
+    `, [commentId])
+
+    return likesAndDislokes
   }
 }

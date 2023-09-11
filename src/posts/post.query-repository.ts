@@ -5,7 +5,6 @@ import { Paginator } from "../models/Paginator";
 import { QueryParamsModel } from "../models/PaginationQuery";
 import { createPaginationQuery } from "../helpers/pagination";
 import { LikeStatuses } from "../helpers/likeStatuses";
-import { WithId } from 'mongodb' 
 import { CommentViewModel } from "../comments/models/view/CommentViewModel";
 import { Comment, CommentDocument } from "../comments/models/schemas/Comment";
 import { PostViewModel } from "./models/view/Post";
@@ -14,6 +13,8 @@ import { CommentLike } from "../comments/models/schemas/CommentLike";
 import { DataSource } from "typeorm";
 import { InjectDataSource } from "@nestjs/typeorm";
 import { SQLPostViewModel } from "./models/view/SQLPost";
+import { UUID } from "crypto";
+import { SQLComment } from "../comments/models/view/SQLCommentViewModel";
 
 @Injectable()
 export class PostQueryRepository {
@@ -93,7 +94,6 @@ export class PostQueryRepository {
       ...post,
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       items: post.items.map(({ likesAndDislikesCount, ...rest }) => {
-        delete rest.likesAndDislikes
         return {
           ...rest,
           extendedLikesInfo: {
@@ -107,14 +107,15 @@ export class PostQueryRepository {
     };
     for(let i = 0; i < newArray.items.length; i++){
       //
-      const filteredLikesAndDislikes = this.filterLikesAndDislikes(post.items[i].likesAndDislikes, bannedUserIds)
+      const postLikesAndDislikes = await this.getPostLikesAndDislikesById(post.items[i].id)
+      const filteredLikesAndDislikes = this.filterLikesAndDislikes(postLikesAndDislikes, bannedUserIds)
       const likesCount = filteredLikesAndDislikes.likesCount
       const dislikesCount = filteredLikesAndDislikes.dislikesCount
 
       newArray.items[i].extendedLikesInfo.likesCount = likesCount
       newArray.items[i].extendedLikesInfo.dislikesCount = dislikesCount
 
-      const newestLikes = post.items[i].likesAndDislikes
+      const newestLikes = postLikesAndDislikes
       .filter((element) => element.likeStatus === 'Like' && !bannedUserIds.includes(element.userId))
       .slice(-3)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -122,27 +123,51 @@ export class PostQueryRepository {
       .sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime())
       newArray.items[i].extendedLikesInfo.newestLikes = newestLikes
       // const status = await this.postLikeModel.findOne({createdAt: newArray.items[i].createdAt, userId: userId})
-      const status = post.items[i].likesAndDislikes.find(element => element.userId === userId)
+      const status = postLikesAndDislikes.find(element => element.userId === userId)
       if(status){
           newArray.items[i].extendedLikesInfo.myStatus = status.likeStatus
       }
     }
     return newArray 
   }
+
+  async getPostLikesAndDislikesById(postId: UUID){
+    const likesAndDislokes = await this.dataSource.query(`
+      SELECT "userId", login, "addedAt", "likeStatus" FROM public."PostLikesAndDislikes"
+      WHERE "postId" = $1
+    `, [postId])
+
+    return likesAndDislokes
+  }
   
   async getCommentsForSpecifiedPost(postId: string, params: QueryParamsModel, userId: string, bannedUserIds: string[]): Promise<Paginator<CommentViewModel> | null>{
-    const isFinded = await this.postModel.findById(postId)
-    if(!isFinded){
+    //const isFinded = await this.postModel.findById(postId)
+    const isFinded = await this.dataSource.query(`
+      SELECT * FROM public."Posts"
+      WHERE "id" = $1
+    `,[postId])
+    if(!isFinded[0]){
       throw new NotFoundException()
     }
     const query = createPaginationQuery(params)
     const skip = (query.pageNumber - 1) * query.pageSize
-    const comments = await this.commentModel.find({postId: postId, 'commentatorInfo.userId': { $nin: bannedUserIds }}, {postId: false, __v: false})
-    .sort({[query.sortBy]: query.sortDirection === 'asc' ? 1 : -1})
-    .skip(skip)
-    .limit(query.pageSize).lean()
-    const count = await this.commentModel.countDocuments({postId: postId, 'commentatorInfo.userId': { $nin: bannedUserIds }})
-    const result = Paginator.createPaginationResult(count, query, comments)
+    // const comments = await this.commentModel.find({postId: postId, 'commentatorInfo.userId': { $nin: bannedUserIds }}, {postId: false, __v: false})
+    // .sort({[query.sortBy]: query.sortDirection === 'asc' ? 1 : -1})
+    // .skip(skip)
+    // .limit(query.pageSize).lean()
+    // const count = await this.commentModel.countDocuments({postId: postId, 'commentatorInfo.userId': { $nin: bannedUserIds }})
+    const comments: SQLComment[] = await this.dataSource.query(`
+    SELECT * FROM public."Comments" c
+    WHERE "postId" = $1
+    ORDER BY c."${query.sortBy}" COLLATE "C" ${query.sortDirection}
+    OFFSET $2
+    LIMIT $3
+    `, [postId, skip, query.pageSize])
+    const count = await this.dataSource.query(`
+      SELECT COUNT(*) FROM public."Comments"
+      WHERE "postId" = $1
+    `,[postId])
+    const result = Paginator.createPaginationResult(+count[0].count, query, comments)
 
     return await this.editCommentToViewModel(result, userId, bannedUserIds)
   }
@@ -189,19 +214,30 @@ export class PostQueryRepository {
   
   async getCommentsForBlogs(params: QueryParamsModel, blogIdArray: string[], userId: string, bannedUserIds: string[]): Promise<Paginator<CommentViewModel>> {
     const postsArray = await this.getPostssForBlogs(blogIdArray)
-    const postIdArray = postsArray.map(({...post}) => (post._id.toString()))
+    const postIdArray = postsArray.map(({...post}) => (post.id.toString()))
     const query = createPaginationQuery(params)
     const skip = (query.pageNumber - 1) * query.pageSize
-    const filter = { postId: { $in: postIdArray }, 'commentatorInfo.userId': { $nin: bannedUserIds } }
-    const comments = await this.commentModel.find(filter, {__v: false}).sort({[query.sortBy]: query.sortDirection === 'asc' ? 1 : -1})
-    .skip(skip)
-    .limit(query.pageSize).lean()
+    // const filter = { postId: { $in: postIdArray }, 'commentatorInfo.userId': { $nin: bannedUserIds } }
+    // const comments = await this.commentModel.find(filter, {__v: false}).sort({[query.sortBy]: query.sortDirection === 'asc' ? 1 : -1})
+    // .skip(skip)
+    // .limit(query.pageSize).lean()
+    const comments: SQLComment[] = await this.dataSource.query(`
+    SELECT * FROM public."Comments"
+    WHERE "postId" IN $1 and ("commentatorInfo"->>'userId')::int NOT IN ($2)
+    ORDER BY p."${query.sortBy}" COLLATE "C" ${query.sortDirection}
+    OFFSET $3
+    LIMIT $4
+    `, [postIdArray, bannedUserIds, skip, query.pageSize])
+    const count = await this.dataSource.query(`
+      SELECT COUNT(*) FROM public."Posts" p
+      WHERE "postId" IN $1 and ("commentatorInfo"->>'userId')::int NOT IN ($2)
+    `,[postIdArray, bannedUserIds])
     const mappedComments = comments.map(comment => {
       // if !post
-      const post = postsArray.find(post => post._id.toString() === comment.postId)
+      const post = postsArray.find(post => post.id.toString() === comment.postId)
       delete comment.postId
       const postInfo = {
-        id: post._id,
+        id: post.id,
         title: post.title,
         blogId: post.blogId,
         blogName: post.blogName
@@ -210,38 +246,52 @@ export class PostQueryRepository {
       return {...comment, postInfo}
     })
 
-    const count = await this.commentModel.countDocuments(filter)
     const result = Paginator.createPaginationResult(count, query, mappedComments)
 
     return await this.editCommentToViewModel(result, userId, bannedUserIds)
   }
 
-  private async getPostssForBlogs(blogIdArray: string[]): Promise<WithId<Post>[]> {
-    const posts = await this.postModel
-    .find({ blogId: { $in: blogIdArray } }).lean()
+  private async getPostssForBlogs(blogIdArray: string[]): Promise<SQLPostViewModel[]> {
+    // const posts = await this.postModel
+    // .find({ blogId: { $in: blogIdArray } }).lean()
+    // return posts
+    const posts: SQLPostViewModel[] = await this.dataSource.query(`
+    SELECT * FROM public."Posts"
+    WHERE blogId IN ($1)
+    `, [blogIdArray])
     return posts
   }
 
-  private async editCommentToViewModel(comment: Paginator<WithId<Comment>>, userId: string, bannedUserIds: string[]): Promise<Paginator<CommentViewModel>> {
+  private async editCommentToViewModel(comment: Paginator<SQLComment>, userId: string, bannedUserIds: string[]): Promise<Paginator<CommentViewModel>> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const newArray = {...comment, items: comment.items.map(({ _id, likesAndDislikesCount, likesAndDislikes, ...rest }) => ({
-        id: _id.toString(), ...rest, commentatorInfo: {userId: rest.commentatorInfo.userId, userLogin: rest.commentatorInfo.userLogin},
+    const newArray = {...comment, items: comment.items.map(({postId, likesAndDislikesCount, ...rest }) => ({
+        ...rest, commentatorInfo: {userId: rest.commentatorInfo.userId, userLogin: rest.commentatorInfo.userLogin},
         likesInfo: { likesCount: 0,  dislikesCount: 0, myStatus: LikeStatuses.None.toString() }
     }))}
     for(let i = 0; i < newArray.items.length; i++){
-      const filteredLikesAndDislikes = this.filterLikesAndDislikes(comment.items[i].likesAndDislikes, bannedUserIds)
+      const commentLikesAndDislikes = await this.getCommentLikesAndDislikesById(comment.items[i].id)
+      const filteredLikesAndDislikes = this.filterLikesAndDislikes(commentLikesAndDislikes, bannedUserIds)
       const likesCount = filteredLikesAndDislikes.likesCount
       const dislikesCount = filteredLikesAndDislikes.dislikesCount
 
       newArray.items[i].likesInfo.likesCount = likesCount
       newArray.items[i].likesInfo.dislikesCount = dislikesCount
 
-      const status = comment.items[i].likesAndDislikes.find(element => element.userId === userId)
+      const status = commentLikesAndDislikes.find(element => element.userId === userId)
       if(status){
         newArray.items[i].likesInfo.myStatus = status.likeStatus
       }
     }
     return newArray
+  }
+
+  async getCommentLikesAndDislikesById(commentId: UUID){
+    const likesAndDislokes = await this.dataSource.query(`
+      SELECT "userId", "addedAt", "likeStatus" FROM public."CommentLikesAndDislikes"
+      WHERE "commentId" = $1
+    `, [commentId])
+
+    return likesAndDislokes
   }
 
   private filterLikesAndDislikes(likesAndDislikes: PostLike[] | CommentLike[], bannedUserIds: string[]) {

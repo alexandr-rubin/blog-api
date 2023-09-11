@@ -3,7 +3,7 @@ import { NotFoundException } from "@nestjs/common";
 import { LikeStatuses } from "../../helpers/likeStatuses";
 import { CommentRepository } from "../comment.repository";
 import { CommentQueryRepository } from "../comment.query-repository";
-import { CommentDocument } from "../models/schemas/Comment";
+import { SQLComment } from "../models/view/SQLCommentViewModel";
 
 export class UpdateCommentLikeStatusCommand {
   constructor(public commentId: string, public likeStatus: string, public userId:string) {}
@@ -19,7 +19,9 @@ export class UpdateCommentLikeStatusUseCase implements ICommandHandler<UpdateCom
       throw new NotFoundException()
     }
 
-    const like = comment.likesAndDislikes.find(likeOrDislike => likeOrDislike.userId === command.userId)
+    const commentLikes = await this.commentQueryRepository.getCommentLikesAndDislikesById(comment.id)
+
+    const like = commentLikes.find(likeOrDislike => likeOrDislike.userId === command.userId)
 
     if(!like){
       if(command.likeStatus === LikeStatuses.None){
@@ -67,9 +69,9 @@ export class UpdateCommentLikeStatusUseCase implements ICommandHandler<UpdateCom
     return true
   }
 
-  private async firstLike(comment: CommentDocument, likeStatus: string, userId: string) {
-    comment.likesAndDislikes.push({userId: userId, addedAt: new Date().toISOString(), likeStatus: likeStatus})
-    await this.commentRepository.updateFirstLike(comment)
+  private async firstLike(comment: SQLComment, likeStatus: string, userId: string) {
+    const commentLike = {userId: userId, addedAt: new Date().toISOString(), likeStatus: likeStatus}
+    await this.commentRepository.updateFirstLike(commentLike, comment.id)
     if(likeStatus === LikeStatuses.Like){
       await this.commentRepository.incLike(comment.id)
     }
@@ -79,10 +81,10 @@ export class UpdateCommentLikeStatusUseCase implements ICommandHandler<UpdateCom
     return true
   }
 
-  private async updateCommentLikeStatus(commentId: string, likeStatus: string, userId) {
-    const comment = await this.commentQueryRepository.getCommentByIdNoView(commentId)
-    const like = comment.likesAndDislikes.find(likeOrDislike => likeOrDislike.userId === userId)
-    like.likeStatus = likeStatus
-    await this.commentRepository.updateCommentLikeStatus(comment)
+  private async updateCommentLikeStatus(commentId: string, likeStatus: string, userId: string) {
+    // const comment = await this.commentQueryRepository.getCommentByIdNoView(commentId)
+    // const like = comment.likesAndDislikes.find(likeOrDislike => likeOrDislike.userId === userId)
+    // like.likeStatus = likeStatus
+    await this.commentRepository.updateCommentLikeStatus(likeStatus, commentId, userId)
   }
 }

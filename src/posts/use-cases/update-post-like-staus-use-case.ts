@@ -18,7 +18,9 @@ export class UpdatePostLikeStatusUseCase implements ICommandHandler<UpdatePostLi
       throw new NotFoundException()
     }
 
-    const like = post.likesAndDislikes.find(likeOrDislike => likeOrDislike.userId === command.userId)
+    const postLikesAndDislikes = await this.postQueryRepository.getPostLikesAndDislikesById(post.id)
+
+    const like = postLikesAndDislikes.find(likeOrDislike => likeOrDislike.userId === command.userId)
 
     if(!like){
       return await this.firstLike(command.likeStatus, command.userId, post, command.login)
@@ -54,8 +56,8 @@ export class UpdatePostLikeStatusUseCase implements ICommandHandler<UpdatePostLi
     if(likeStatus === LikeStatuses.None){
       return true
     }
-    post.likesAndDislikes.push({userId: userId, login: login, addedAt: new Date().toISOString(), likeStatus: likeStatus})
-    await this.postRepository.savePost(post)
+    const postLike = {userId: userId, login: login, addedAt: new Date().toISOString(), likeStatus: likeStatus}
+    await this.postRepository.updateFirstLike(post.id, postLike)
     if(likeStatus === LikeStatuses.Like){
       await this.postRepository.incLike(post.id)
     }
@@ -92,12 +94,12 @@ export class UpdatePostLikeStatusUseCase implements ICommandHandler<UpdatePostLi
   }
 
   private async updatePostLikeStatus(postId: string, likeStatus: string, userId: string) {
-    const post = await this.postRepository.getPostDocument(postId)
-    if(!post){
-      throw new NotFoundException('Post is not found')
-    }
-    const like = post.likesAndDislikes.find(likeOrDislike => likeOrDislike.userId === userId)
-    like.likeStatus = likeStatus
-    await this.postRepository.updatePostLikeStatus(post)
+    // const post = await this.postRepository.getPostDocument(postId)
+    // if(!post){
+    //   throw new NotFoundException('Post is not found')
+    // }
+    // const like = post.likesAndDislikes.find(likeOrDislike => likeOrDislike.userId === userId)
+    // like.likeStatus = likeStatus
+    await this.postRepository.updatePostLikeStatus(postId, userId, likeStatus)
   }
 }

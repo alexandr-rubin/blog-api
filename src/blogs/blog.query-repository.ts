@@ -6,7 +6,6 @@ import { QueryParamsModel } from "../models/PaginationQuery";
 import { createPaginationQuery } from "../helpers/pagination";
 import { BlogViewModel } from "./models/view/BlogViewModel";
 import { Blog, BlogDocument } from "./models/schemas/Blog";
-import { BlogAdminViewModel } from "./models/view/BlogAdminViewModel";
 import { BlogBannedUsers, BlogBannedUsersDocument } from "./models/schemas/BlogBannedUsers";
 import { DataSource } from "typeorm";
 import { InjectDataSource } from "@nestjs/typeorm";

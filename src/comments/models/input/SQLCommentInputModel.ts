@@ -1,7 +1,4 @@
-import { UUID } from "crypto";
-
-export class SQLComment {
-  id!: UUID
+export class SQLCommentInputModel {
   content!: string
   commentatorInfo!: {userId: string, userLogin: string}
   createdAt!: string

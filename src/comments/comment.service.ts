@@ -20,12 +20,12 @@ export class CommentService {
     return isDeleted
   }
 
-  async updateCommentById(id: string, post: CommentInputModel, userId: string): Promise<boolean> {
+  async updateCommentById(id: string, newComment: CommentInputModel, userId: string): Promise<boolean> {
     const comment = await this.commentQueryRepository.getCommentByIdNoView(id)
     if(comment && comment.commentatorInfo.userId !== userId){
       throw new ForbiddenException()
     }
-    const isUpdated = await this.commentRepository.updateCommentById(id, post)
+    const isUpdated = await this.commentRepository.updateCommentById(id, newComment)
     if(!isUpdated){
       throw new NotFoundException()
     }
