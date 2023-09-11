@@ -68,18 +68,19 @@ export class PostQueryRepository {
     if(!post[0]){
       throw new NotFoundException()
     }
-    const like = post[0].likesAndDislikes.find(like => like.userId === userId && !bannedUserIds.includes(like.userId))
+    const postLikesAndDislikes = await this.getPostLikesAndDislikesById(postId)
+    const like = postLikesAndDislikes.find(like => like.userId === userId && !bannedUserIds.includes(like.userId))
     const likeStatus = like === undefined ? LikeStatuses.None : like.likeStatus
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     //const newestLikes = post.likesAndDislikes.filter((element) => element.likeStatus === 'Like').slice(-3).map((element) => element).map(({ likeStatus, ...rest }) => rest)
-    const newestLikes = post[0].likesAndDislikes
+    const newestLikes = postLikesAndDislikes
     .filter((element) => element.likeStatus === 'Like' && !bannedUserIds.includes(element.userId))
     .slice(-3)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     .map(({ likeStatus, ...rest }) => rest)
     .sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime())
 
-    const filteredLikesAndDislikes = this.filterLikesAndDislikes(post[0].likesAndDislikes, bannedUserIds)
+    const filteredLikesAndDislikes = this.filterLikesAndDislikes(postLikesAndDislikes, bannedUserIds)
     const likesCount = filteredLikesAndDislikes.likesCount
     const dislikesCount = filteredLikesAndDislikes.dislikesCount
 
@@ -131,7 +132,7 @@ export class PostQueryRepository {
     return newArray 
   }
 
-  async getPostLikesAndDislikesById(postId: UUID){
+  async getPostLikesAndDislikesById(postId: string){
     const likesAndDislokes = await this.dataSource.query(`
       SELECT "userId", login, "addedAt", "likeStatus" FROM public."PostLikesAndDislikes"
       WHERE "postId" = $1
