@@ -33,7 +33,7 @@ export class CommentQueryRepository {
     const dislikesCount = filteredLikesAndDislikes.filter(element => element.likeStatus === LikeStatuses.Dislike).length
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { likesAndDislikesCount, ...rest } = {...comment[0], commentatorInfo: {userId: comment[0].commentatorInfo.userId, userLogin: comment[0].commentatorInfo.userLogin},
+    const { postId, likesAndDislikesCount, ...rest } = {...comment[0], commentatorInfo: {userId: comment[0].commentatorInfo.userId, userLogin: comment[0].commentatorInfo.userLogin},
     likesInfo: {likesCount: likesCount, dislikesCount: dislikesCount, myStatus: likeStatus}}
     return rest
   }

@@ -16,7 +16,7 @@ export class CommentRepository {
     // const result = await this.commentModel.findByIdAndDelete(id)
     // return !!result
     await this.dataSource.query(`
-    DELETE FROM public."CommentLikesAndDislkes"
+    DELETE FROM public."CommentLikesAndDislikes"
     WHERE "commentId" = $1
     `,[id])
     return await this.dataSource.query(`
