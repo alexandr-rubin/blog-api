@@ -63,6 +63,15 @@ import { BloggerBlogsUsersController } from './blogs/blogs-users.controller';
 import { BlogBannedUsers, BlogBannedUsersSchema } from './blogs/models/schemas/BlogBannedUsers';
 import { UpdateCommentLikeStatusUseCase } from './comments/use-cases/update-comment-like-use-case';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserEntity } from './users/user.entity';
+import { APILogEntity } from './security/ALILogs.entity';
+import { DeviceEntity } from './models/Device.entity';
+import { BlogEntity } from './blogs/entities/blog.entity';
+import { BlogBannedUsersEntity } from './blogs/entities/blog-banned-users.entity';
+import { PostEntity } from './posts/entities/post.entity';
+import { PostLikesAndDislikesEntity } from './posts/entities/post-likes-and-dislikes.entity';
+import { CommentEntity } from './comments/entities/comment.entity';
+import { CommentLikesAndDislikesEntity } from './comments/entities/comment-likes-and-dislikes';
 
 @Module({
   imports: [
@@ -110,15 +119,19 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       signOptions: { expiresIn: '10m' },
     }),
 
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'trumpet.db.elephantsql.com',
-      port: 5432,
-      username: 'fhxncxpi',
-      password: '5fZdB3liCU9oQPAvbl_ARx9hqpZiAXg2',
-      database: 'fhxncxpi',
-      autoLoadEntities: false,
-      synchronize: false,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('db.postgres.host'),
+        port: configService.get<number>('db.postgres.port'),
+        username: configService.get<string>('db.postgres.username'),
+        password: configService.get<string>('db.postgres.password'),
+        database: configService.get<string>('db.postgres.database'),
+        autoLoadEntities: true,
+        synchronize: true,
+      }),
+      inject: [ConfigService],
     }),
 
     // TypeOrmModule.forRoot({
@@ -127,10 +140,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     //   port: 5432,
     //   username: 'admin',
     //   password: 'admin',
-    //   database: 'incubatorTypeorm',
-    //   autoLoadEntities: false,
-    //   synchronize: false,
+    //   database: 'incubatorTypeormAuto',
+    //   autoLoadEntities: true,
+    //   synchronize: true,
     // }),
+
+    TypeOrmModule.forFeature([UserEntity, 
+      APILogEntity, 
+      DeviceEntity, 
+      BlogEntity, 
+      BlogBannedUsersEntity, 
+      PostEntity, 
+      PostLikesAndDislikesEntity, 
+      CommentEntity,
+      CommentLikesAndDislikesEntity]),
 
     MongooseModule.forRootAsync({
       imports: [ConfigModule], // Импортируйте ConfigModule

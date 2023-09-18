@@ -21,9 +21,24 @@ describe('Blogs (e2e)', () => {
     
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).overrideProvider(ConfigService) // Переопределение провайдера ConfigService
+    }).overrideProvider(ConfigService)
     .useValue({
-      get: () => getTestConfiguration().db.mongo.mongodb_uri, // Использование тестового URI из тестовой конфигурации
+      get: (key: string) => {
+        if(key === 'db.mongo.mongodb_uri')
+          return getTestConfiguration().db.mongo.mongodb_uri
+        if(key === 'db.postgres.host')
+          return getTestConfiguration().db.postgres.host
+        if(key === 'db.postgres.port')
+          return getTestConfiguration().db.postgres.port
+        if(key === 'db.postgres.username')
+          return getTestConfiguration().db.postgres.username
+        if(key === 'db.postgres.password')
+          return getTestConfiguration().db.postgres.password
+        if(key === 'db.postgres.database')
+          return getTestConfiguration().db.postgres.database
+        if(key === 'JWT_SECRET_KEY')
+          return getTestConfiguration().jwt_secret_key
+      },
     })
     .compile();
 
@@ -40,6 +55,8 @@ describe('Blogs (e2e)', () => {
     await app.close()
     await mongoose.disconnect()
     // await mongoServer.stop()
+    // how to close sql connection
+    
   })
 
   const user =
