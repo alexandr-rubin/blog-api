@@ -18,7 +18,7 @@ export class BlogEntity {
   isMembership!: boolean
   @ManyToOne(() => UserEntity)
   user: UserEntity
-  @Column('uuid')
+  @Column({ type: 'uuid', nullable: true })
   userId: UUID
   @Column('jsonb')
   banInfo: {
