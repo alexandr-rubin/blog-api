@@ -65,13 +65,13 @@ import { UpdateCommentLikeStatusUseCase } from './comments/use-cases/update-comm
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './users/user.entity';
 import { APILogEntity } from './security/ALILogs.entity';
-import { DeviceEntity } from './models/Device.entity';
 import { BlogEntity } from './blogs/entities/blog.entity';
 import { BlogBannedUsersEntity } from './blogs/entities/blog-banned-users.entity';
 import { PostEntity } from './posts/entities/post.entity';
 import { PostLikesAndDislikesEntity } from './posts/entities/post-likes-and-dislikes.entity';
 import { CommentEntity } from './comments/entities/comment.entity';
 import { CommentLikesAndDislikesEntity } from './comments/entities/comment-likes-and-dislikes';
+import { DeviceEntity } from './models/device.entity';
 
 @Module({
   imports: [
