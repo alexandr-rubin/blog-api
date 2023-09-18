@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm"
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
 import { UUID } from "typeorm/driver/mongodb/bson.typings"
 import { PostEntity } from "./post.entity"
 import { UserEntity } from "../../users/user.entity"
@@ -7,8 +7,7 @@ import { UserEntity } from "../../users/user.entity"
 export class PostLikesAndDislikesEntity {
   @PrimaryGeneratedColumn('uuid')
   id: UUID
-  @OneToOne(() => UserEntity)
-  @JoinColumn()
+  @ManyToOne(() => UserEntity)
   user: UserEntity
   @Column('uuid')
   userId: UUID

@@ -1,5 +1,5 @@
 import { UserEntity } from "../../users/user.entity"
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm"
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
 import { UUID } from "typeorm/driver/mongodb/bson.typings"
 import { CommentEntity } from "./comment.entity"
 
@@ -7,8 +7,7 @@ import { CommentEntity } from "./comment.entity"
 export class CommentLikesAndDislikesEntity {
   @PrimaryGeneratedColumn('uuid')
   id: UUID
-  @OneToOne(() => UserEntity)
-  @JoinColumn()
+  @ManyToOne(() => UserEntity)
   user: UserEntity
   @Column('uuid')
   userId: UUID
