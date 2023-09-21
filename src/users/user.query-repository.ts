@@ -53,7 +53,7 @@ export class UserQueryRepository {
         });
       }
     })
-    .orderBy(`user.${query.sortBy}`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
+    .orderBy(`user.${query.sortBy} COLLATE "C"`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
     .skip(skip)
     .take(query.pageSize)
     .getMany()
