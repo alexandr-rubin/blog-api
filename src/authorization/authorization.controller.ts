@@ -19,7 +19,7 @@ import { RolesGuard } from "../guards/roles.guard";
 import { LogAPIThrottlerGuard } from "../guards/logAPIThrottlerGuard";
 
 //@UseGuards(LogAPIThrottlerGuard)
-////role
+//role
 @UseGuards(RolesGuard)
 @Roles(UserRoles.Guest)
 @Controller('auth')
