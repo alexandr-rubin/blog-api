@@ -7,7 +7,7 @@ import { createPaginationQuery } from "../helpers/pagination";
 import { User, UserDocument } from "./models/schemas/User";
 import { BlogAdminViewModel } from "../blogs/models/view/BlogAdminViewModel";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
-import { DataSource, ILike, Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 import { UserEntity } from "./user.entity";
 
 @Injectable()
@@ -42,18 +42,17 @@ export class UserQueryRepository {
     // LIMIT $4
     // `, [query.searchLoginTerm ? `%${query.searchLoginTerm}%` : null, query.searchEmailTerm ? `%${query.searchEmailTerm}%` : null, skip, query.pageSize])
 
-    const users = await this.userRepository.find({
-      select: ["id", "login", "email", "createdAt"],
-      where: [
-        {
-          login: ILike(query.searchLoginTerm ? `%${query.searchLoginTerm}%` : '%%'),
-          email: ILike(query.searchEmailTerm ? `%${query.searchEmailTerm}%` : '%%'),
-        },
-      ],
-      order: { [query.sortBy]: query.sortDirection },
-      take: query.pageSize,
-      skip: skip,
-    })
+    const users = await this.userRepository
+      .createQueryBuilder('user')
+      .select(['user.id', 'user.login', 'user.email', 'user.createdAt'])
+      .where('user.login ILIKE :searchLoginTerm OR user.email ILIKE :searchEmailTerm', {
+        searchLoginTerm: `%${query.searchLoginTerm}%`,
+        searchEmailTerm: `%${query.searchEmailTerm}%`,
+      })
+      .orderBy(`user.${query.sortBy}`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
+      .skip(skip)
+      .take(query.pageSize)
+      .getMany()
 
     // const count = await this.userModel.countDocuments({$or: searchTermsArray.length === 0 ? [{}] : searchTermsArray})
     // const count = await this.dataSource.query(`
