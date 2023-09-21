@@ -74,7 +74,7 @@ export class UserQueryRepository {
       .where('(COALESCE(user.login ILIKE :searchLoginTerm, true) OR COALESCE(user.email ILIKE :searchEmailTerm, true))', {
         searchLoginTerm: searchLoginTerm ? `%${searchLoginTerm}%` : null,
         searchEmailTerm: searchEmailTerm ? `%${searchEmailTerm}%` : null,
-      });
+      })
 
     const result = await builder.getRawOne()
     return +result.count
