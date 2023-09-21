@@ -156,11 +156,11 @@ import { DeviceEntity } from './models/device.entity';
       CommentLikesAndDislikesEntity]),
 
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
+      imports: [ConfigModule], // Импортируйте ConfigModule
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('db.mongo.mongodb_uri'),
+        uri: configService.get<string>('db.mongo.mongodb_uri'), // Получение URI MongoDB из конфигурации
       }),
-      inject: [ConfigService],
+      inject: [ConfigService], // Внедрение ConfigService
     }),
     MongooseModule.forFeature([
       { name: Post.name, schema: PostSchema },

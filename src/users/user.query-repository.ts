@@ -43,16 +43,20 @@ export class UserQueryRepository {
     // `, [query.searchLoginTerm ? `%${query.searchLoginTerm}%` : null, query.searchEmailTerm ? `%${query.searchEmailTerm}%` : null, skip, query.pageSize])
 
     const users = await this.userRepository
-      .createQueryBuilder('user')
-      .select(['user.id', 'user.login', 'user.email', 'user.createdAt'])
-      .where('user.login ILIKE :searchLoginTerm OR user.email ILIKE :searchEmailTerm', {
-        searchLoginTerm: `%${query.searchLoginTerm}%`,
-        searchEmailTerm: `%${query.searchEmailTerm}%`,
-      })
-      .orderBy(`user.${query.sortBy}`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
-      .skip(skip)
-      .take(query.pageSize)
-      .getMany()
+    .createQueryBuilder('user')
+    .select(['user.id', 'user.login', 'user.email', 'user.createdAt'])
+    .where((qb) => {
+      if (query.searchLoginTerm || query.searchEmailTerm) {
+        qb.andWhere('(user.login ILIKE :searchLoginTerm OR user.email ILIKE :searchEmailTerm)', {
+          searchLoginTerm: query.searchLoginTerm ? `%${query.searchLoginTerm}%` : '',
+          searchEmailTerm: query.searchEmailTerm ? `%${query.searchEmailTerm}%` : '',
+        });
+      }
+    })
+    .orderBy(`user.${query.sortBy}`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
+    .skip(skip)
+    .take(query.pageSize)
+    .getMany()
 
     // const count = await this.userModel.countDocuments({$or: searchTermsArray.length === 0 ? [{}] : searchTermsArray})
     // const count = await this.dataSource.query(`
