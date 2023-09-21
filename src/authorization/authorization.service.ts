@@ -16,6 +16,7 @@ import { ConfigType } from "../config/configuration";
 import { User } from "../users/models/schemas/User";
 import { UserInputModel } from "../users/models/input/UserInput";
 import { UserRoles } from "../helpers/userRoles";
+import { UpdateResult } from "typeorm";
 
 @Injectable()
 export class AuthorizationService {
@@ -25,12 +26,13 @@ export class AuthorizationService {
   async createUser(userDto: UserInputModel): Promise<User> {
     const newUser: User = await User.createUser(userDto, false, UserRoles.User)
     // какой репо
-    const createdUser = await this.userRepository.createUser(newUser)
+    const id = await this.userRepository.createUser(newUser)
     await this.emailService.sendRegistrationConfirmationEmail(newUser.email, newUser.confirmationEmail.confirmationCode)
-    return createdUser
+    const result = {id: id, ...newUser, confirmationEmail: undefined, confirmationPassword: undefined, password: undefined, banInfo: undefined, role: undefined}
+    return result
   }
 
-  async confrmEmail(code: string): Promise<User>{
+  async confrmEmail(code: string): Promise<UpdateResult>{
     const user = await this.userQueryRepository.findUserByConfirmationEmailCode(code)
     //ныжны ли проверки если есть проверка в мидлваре
     if (!user)
@@ -41,10 +43,10 @@ export class AuthorizationService {
       throw new BadRequestException()
     }
     user.confirmationEmail.isConfirmed = true
-    const updatedUser = await this.userRepository.updateConfirmation(user)
-    return updatedUser
+    const updateResult = await this.userRepository.updateConfirmation(user)
+    return updateResult
   }
-  async resendEmail(email: string): Promise<User>{
+  async resendEmail(email: string): Promise<UpdateResult>{
     const user = await this.userQueryRepository.getUsergByEmail(email)
     // middlware
     if (!user)
@@ -57,12 +59,12 @@ export class AuthorizationService {
     const code = uuidv4()
     user.confirmationEmail.confirmationCode = code
     user.confirmationEmail.expirationDate = genExpirationDate(1, 3).toISOString()
-    const updatedUser = await this.userRepository.updateConfirmationCode(user)
+    const updateResult = await this.userRepository.updateConfirmationCode(user)
     await this.emailService.sendRegistrationConfirmationEmail(email, code)
-    return updatedUser
+    return updateResult
   }
 
-  async recoverPassword(email: string): Promise<User> {
+  async recoverPassword(email: string): Promise<UpdateResult> {
     const user = await this.userQueryRepository.getUsergByEmail(email)
     if(!user){
       return
@@ -116,7 +118,7 @@ export class AuthorizationService {
     const refreshTokenPayload = { deviceId: deviceId, userId: userId, issuedAt: issuedAt }
     const result = {
       accessToken: await this.jwtService.signAsync(accessTokenPayload),
-      refreshToken: await this.jwtService.signAsync(refreshTokenPayload, { expiresIn: '20s' })
+      refreshToken: await this.jwtService.signAsync(refreshTokenPayload, { expiresIn: '20m' })
     }
     return result
   }
@@ -157,7 +159,7 @@ export class AuthorizationService {
     return tokens
   }
 
-  async logoutDevice(refreshToken: string): Promise<Device>{
+  async logoutDevice(refreshToken: string): Promise<UpdateResult>{
     ////
     const decodedToken = await this.jwtService.verifyAsync(refreshToken)
     const isLogedout = await this.authorizationRepository.logoutDevice(decodedToken.deviceId)

@@ -4,7 +4,7 @@ export class QueryParamsModel {
   searchLoginTerm?: string
   searchEmailTerm?: string
   sortBy!: string
-  sortDirection!: string
+  sortDirection!: "asc" | "desc"
   pageNumber!: number
   pageSize!: number
 }

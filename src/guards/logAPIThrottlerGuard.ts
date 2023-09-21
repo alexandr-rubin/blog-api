@@ -18,7 +18,7 @@ export class LogAPIThrottlerGuard extends ThrottlerGuard {
     const filter = {
       IP: request.ip,
       URL: request.originalUrl,
-      date: { $gte: tenSecondsAgo.toISOString() },
+      date: tenSecondsAgo.toISOString(),
     }
 
     const count = await this.scurityService.countDoc(filter)

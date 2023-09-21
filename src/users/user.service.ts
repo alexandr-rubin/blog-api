@@ -22,10 +22,10 @@ export class UserService {
   //
   async deleteUserById(id: string): Promise<boolean> {
     const isDeleted = await this.userRepository.deleteUserById(id)
-    if(!isDeleted){
+    if(isDeleted.affected === 0){
       throw new NotFoundException()
     }
-    return isDeleted
+    return isDeleted.affected > 0
   }
   //
   async deleteUsersTesting(): Promise<boolean> {

@@ -19,7 +19,7 @@ export class DeviceEntity {
   @ManyToOne(() => UserEntity)
   user: UserEntity
   @Column('uuid')
-  userId: UUID
+  userId: string
   @Column()
   isValid: boolean
 }
