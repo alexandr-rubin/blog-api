@@ -1,11 +1,10 @@
 import { UserEntity } from "../../users/user.entity"
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
-import { UUID } from "typeorm/driver/mongodb/bson.typings"
 
 @Entity('Blogs')
 export class BlogEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: UUID
+  id: string
   @Column()
   name: string
   @Column()
@@ -19,7 +18,7 @@ export class BlogEntity {
   @ManyToOne(() => UserEntity)
   user: UserEntity
   @Column({ type: 'uuid', nullable: true })
-  userId: UUID
+  userId: string
   @Column('jsonb')
   banInfo: {
     isBanned: boolean,

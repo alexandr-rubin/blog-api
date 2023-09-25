@@ -8,8 +8,9 @@ import { PostInputModel } from "./models/input/Post";
 import { PostViewModel } from "./models/view/Post";
 import { Post } from "./models/schemas/Post";
 import { PostForSpecBlogInputModel } from "./models/input/PostForSpecBlog";
-import { SQLPostViewModel } from "./models/view/SQLPost";
 import { SQLCommentInputModel } from "../comments/models/input/SQLCommentInputModel";
+import { PostEntity } from "./entities/post.entity";
+import { DeleteResult } from "typeorm";
 
 @Injectable()
 export class PostService {///////////
@@ -29,21 +30,21 @@ export class PostService {///////////
     return result
   }
 
-  async deletePostById(postId: string, blogId: string): Promise<boolean> {
+  async deletePostById(postId: string, blogId: string): Promise<DeleteResult> {
     const post = await this.postQueryRepository.getPostgByIdNoView(postId)
     if(post.blogId !== blogId){
       throw new ForbiddenException('Incorrect blog id')
     }
     const isDeleted = await this.postRepository.deletePostById(postId)
-    if(!isDeleted){
+    if(isDeleted.affected === 0){
       throw new NotFoundException()
     }
     return isDeleted
   }
 
-  async updatePostById(postId: string, newPost: PostForSpecBlogInputModel, blogId: string): Promise<Post> {
+  async updatePostById(postId: string, newPost: PostForSpecBlogInputModel, blogId: string): Promise<PostEntity> {
     // вынести из квери репо поиск документа?
-    const post: SQLPostViewModel = await this.postQueryRepository.getPostgByIdNoView(postId)
+    const post: PostEntity = await this.postQueryRepository.getPostgByIdNoView(postId)
     if(post.blogId !== blogId){
       throw new ForbiddenException('Incorrect blog id')
     }

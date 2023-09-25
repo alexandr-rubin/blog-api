@@ -1,11 +1,10 @@
 import { BlogEntity } from "../../blogs/entities/blog.entity"
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
-import { UUID } from "typeorm/driver/mongodb/bson.typings"
 
 @Entity('Posts')
 export class PostEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: UUID
+  id: string
   @Column()
   title: string
   @Column()
@@ -15,7 +14,7 @@ export class PostEntity {
   @ManyToOne(() => BlogEntity)
   blog: BlogEntity
   @Column('uuid')
-  blogId: UUID
+  blogId: string
   @Column()
   blogName: string
   @Column()

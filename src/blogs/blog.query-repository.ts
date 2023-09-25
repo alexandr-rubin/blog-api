@@ -7,14 +7,15 @@ import { createPaginationQuery } from "../helpers/pagination";
 import { BlogViewModel } from "./models/view/BlogViewModel";
 import { Blog, BlogDocument } from "./models/schemas/Blog";
 import { BlogBannedUsers, BlogBannedUsersDocument } from "./models/schemas/BlogBannedUsers";
-import { DataSource } from "typeorm";
-import { InjectDataSource } from "@nestjs/typeorm";
+import { DataSource, Repository } from "typeorm";
+import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { SQLBlog } from "./models/view/SQLBlogViewModel";
+import { BlogEntity } from "./entities/blog.entity";
 
 @Injectable()
 export class BlogQueryRepository {
   constructor(@InjectModel(Blog.name) private blogModel: Model<BlogDocument>, @InjectModel(BlogBannedUsers.name) private blogBannedUsersModel: Model<BlogBannedUsersDocument>,
-  @InjectDataSource() protected dataSource: DataSource){}
+  @InjectDataSource() protected dataSource: DataSource, @InjectRepository(BlogEntity) private readonly blogRepository: Repository<BlogEntity>){}
   async getBlogs(params: QueryParamsModel, userId: string | null): Promise<Paginator<BlogViewModel>> {
     const query = createPaginationQuery(params)
     const blogs = await this.getBlogsWithFilter(query, userId)
@@ -24,11 +25,12 @@ export class BlogQueryRepository {
     // const transformedBlogs = blogs.filter(blog => !blog.banInfo.isBanned).map(({ userId, banInfo, ...rest }) => ({ id: rest.id, ...rest }))
 
     //const count = trans blogs?????????????? blogs.length
-    const count = await this.dataSource.query(`
-      SELECT COUNT(*) FROM public."Blogs" b
-      WHERE (COALESCE(b."name" ILIKE $1, true))
-    `,[query.searchNameTerm ? `%${query.searchNameTerm}%` : null])
-    const result = Paginator.createPaginationResult(+count[0].count, query, blogs)
+    // const count = await this.dataSource.query(`
+    //   SELECT COUNT(*) FROM public."Blogs" b
+    //   WHERE (COALESCE(b."name" ILIKE $1, true))
+    // `,[query.searchNameTerm ? `%${query.searchNameTerm}%` : null])
+    const count = await this.countBlogs(query)
+    const result = Paginator.createPaginationResult(count, query, blogs)
     
     return result
   }
@@ -45,30 +47,29 @@ export class BlogQueryRepository {
   async getSuperAdminBlogs(params: QueryParamsModel)/*: Promise<Paginator<BlogAdminViewModel>>*/ {
     const query = createPaginationQuery(params)
     const blogs = await this.getBlogsWithFilter(query, null)
-    const count = await this.dataSource.query(`
-      SELECT COUNT(*) FROM public."Blogs" b
-      WHERE (COALESCE(b."name" ILIKE $1, true))
-    `,[query.searchNameTerm ? `%${query.searchNameTerm}%` : null])
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const count = await this.countBlogs(query)
     // const transformedBlogs = blogs.map(({ userId, ...rest }) => ({ id: rest.id, ...rest, blogOwnerInfo: {userId: userId, userLogin: null}, 
     // banInfo: {isBanned: rest.banInfo.isBanned, banDate: rest.banInfo.banDate} }))
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const transformedBlogs = blogs.map(({ userId, ...rest }) => ({ id: rest.id, ...rest}))
-    const result = Paginator.createPaginationResult(+count[0].count, query, transformedBlogs)
+    const result = Paginator.createPaginationResult(count, query, transformedBlogs)
     return result
   }
 
   async getBlogById(blogId: string): Promise<BlogViewModel> {
     // const blog = await this.blogModel.findById(blogId, { __v: false, userId: false })
-    const blog: SQLBlog = await this.dataSource.query(`
-    SELECT * FROM public."Blogs"
-    WHERE id = $1
-    `, [blogId])
+    // const blog: SQLBlog = await this.dataSource.query(`
+    // SELECT * FROM public."Blogs"
+    // WHERE id = $1
+    // `, [blogId])
 
-    if (!blog[0] /*|| blog[0].banInfo.isBanned*/){
+    const blog = await this.blogRepository.findOneBy({id: blogId})
+
+    if (!blog /*|| blog[0].banInfo.isBanned*/){
       throw new NotFoundException()
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { userId, banInfo, ...rest } = blog[0]
+    const { userId, banInfo, ...rest } = blog
     const id = rest.id
     return { id, ...rest }
   }
@@ -171,18 +172,50 @@ export class BlogQueryRepository {
   }
 
   // add filter to params
-  private async getBlogsWithFilter(query: QueryParamsModel, userId: string | null): Promise<SQLBlog[]>{
+  private async getBlogsWithFilter(query: QueryParamsModel, userId: string | null): Promise<BlogEntity[]>{
     const skip = (query.pageNumber - 1) * query.pageSize
-    const filter: any = userId === null ? `WHERE (COALESCE(b."name" ILIKE $1, true))` : `WHERE (COALESCE(b."name" ILIKE $1, true)) AND "userId" = ${userId}`
-    const blogs: SQLBlog[] = await this.dataSource.query(`
-    SELECT id, name, description, "websiteUrl", "createdAt", "isMembership" FROM public."Blogs" b   
-    ${filter}
-    ORDER BY b."${query.sortBy}" COLLATE "C" ${query.sortDirection}
-    OFFSET $2
-    LIMIT $3
-    `, [query.searchNameTerm ? `%${query.searchNameTerm}%` : null, skip, query.pageSize])
+    // const filter: any = userId === null ? `WHERE (COALESCE(b."name" ILIKE $1, true))` : `WHERE (COALESCE(b."name" ILIKE $1, true)) AND "userId" = ${userId}`
+    // const blogs: SQLBlog[] = await this.dataSource.query(`
+    // SELECT id, name, description, "websiteUrl", "createdAt", "isMembership" FROM public."Blogs" b   
+    // ${filter}
+    // ORDER BY b."${query.sortBy}" COLLATE "C" ${query.sortDirection}
+    // OFFSET $2
+    // LIMIT $3
+    // `, [query.searchNameTerm ? `%${query.searchNameTerm}%` : null, skip, query.pageSize])
+
+    const blogs = await this.blogRepository
+    .createQueryBuilder('blog')
+    .select(['blog.id', 'blog.name', 'blog.description', 'blog.websiteUrl', 'blog.createdAt', 'blog.isMembership'])
+    .where((qb) => {
+      if (userId === null && query.searchNameTerm !== null) {
+        qb.andWhere('blog.name ILIKE :searchNameTerm', {
+          searchNameTerm: query.searchNameTerm ? `%${query.searchNameTerm}%` : ''
+        })
+      }
+      else if(userId !== null && query.searchNameTerm !== null) {
+        qb.andWhere(`blog.name ILIKE :searchNameTerm AND "userId" = ${userId}`, {
+          searchNameTerm: query.searchNameTerm ? `%${query.searchNameTerm}%` : ''
+        })
+      }
+    })
+    .orderBy(`blog.${query.sortBy} COLLATE "C"`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
+    .skip(skip)
+    .take(query.pageSize)
+    .getMany()
 
     return blogs
+  }
+
+  private async countBlogs(query: QueryParamsModel): Promise<number> {
+
+    const builder = this.blogRepository.createQueryBuilder('blog')
+      .select('COUNT(*)', 'count')
+      .where('(COALESCE(blog."name" ILIKE :searchNameTerm, true))', {
+        searchNameTerm: query.searchNameTerm ? `%${query.searchNameTerm}%` : null,
+      })
+
+    const result = await builder.getRawOne()
+    return +result.count
   }
 
   // private generateUserIdFilter(query: QueryParamsModel, userId: string | null) {

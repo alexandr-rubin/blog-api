@@ -3,7 +3,7 @@ import { NotFoundException } from "@nestjs/common";
 import { LikeStatuses } from "../../helpers/likeStatuses";
 import { PostQueryRepository } from "../post.query-repository";
 import { PostRepository } from "../post.repository";
-import { SQLPostViewModel } from "../models/view/SQLPost";
+import { PostEntity } from "../entities/post.entity";
 
 export class UpdatePostLikeStatusCommand {
   constructor(public postId: string, public likeStatus: string, public userId:string, public login: string) {}
@@ -52,7 +52,7 @@ export class UpdatePostLikeStatusUseCase implements ICommandHandler<UpdatePostLi
     return true
   }
 
-  private async firstLike(likeStatus: string, userId: string, post: SQLPostViewModel, login: string) {
+  private async firstLike(likeStatus: string, userId: string, post: PostEntity, login: string) {
     if(likeStatus === LikeStatuses.None){
       return true
     }

@@ -10,16 +10,18 @@ import { Comment, CommentDocument } from "../comments/models/schemas/Comment";
 import { PostViewModel } from "./models/view/Post";
 import { PostDocument, Post, PostLike } from "./models/schemas/Post";
 import { CommentLike } from "../comments/models/schemas/CommentLike";
-import { DataSource } from "typeorm";
-import { InjectDataSource } from "@nestjs/typeorm";
+import { DataSource, Repository } from "typeorm";
+import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { SQLPostViewModel } from "./models/view/SQLPost";
 import { UUID } from "crypto";
 import { SQLComment } from "../comments/models/view/SQLCommentViewModel";
+import { PostEntity } from "./entities/post.entity";
 
 @Injectable()
 export class PostQueryRepository {
   constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>, @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
-  @InjectDataSource() protected dataSource: DataSource){}
+  @InjectDataSource() protected dataSource: DataSource, @InjectRepository(PostEntity) private readonly postRepository: Repository<PostEntity>){}
+
   async getPosts(params: QueryParamsModel, userId: string, bannedUserIds: string[], bannedBlogsIds: string[]): Promise<Paginator<PostViewModel>> {
     // fix
     const query = createPaginationQuery(params)
@@ -37,20 +39,24 @@ export class PostQueryRepository {
     // .lean();
     // const count = await this.postModel.countDocuments(filter)
     //
-    const posts: SQLPostViewModel[] = await this.dataSource.query(`
-    SELECT * FROM public."Posts" p
-    ORDER BY p."${query.sortBy}" COLLATE "C" ${query.sortDirection}
-    OFFSET $1
-    LIMIT $2
-    `, [skip, query.pageSize])
-    const count = await this.dataSource.query(`
-      SELECT COUNT(*) FROM public."Posts"`)
-    const transformedPosts = posts.map((post) => {
-      const {...rest } = post
-      const id = rest.id
-      return { id, ...rest }
-    })
-    const result = Paginator.createPaginationResult(+count[0].count, query, transformedPosts)
+    // const posts: PostEntity[] = await this.dataSource.query(`
+    // SELECT * FROM public."Posts" p
+    // ORDER BY p."${query.sortBy}" COLLATE "C" ${query.sortDirection}
+    // OFFSET $1
+    // LIMIT $2
+    // `, [skip, query.pageSize])
+
+    const posts = await this.postRepository
+    .createQueryBuilder('post')
+    .select()
+    .orderBy(`post.${query.sortBy} COLLATE "C"`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
+    .skip(skip)
+    .take(query.pageSize)
+    .getMany()
+
+    const count = await this.countAllPosts()
+
+    const result = Paginator.createPaginationResult(count, query, posts)
 
     return await this.editPostToViewModel(result, userId, bannedUserIds)
   }
@@ -61,11 +67,12 @@ export class PostQueryRepository {
     //   _id: postId,
     //   blogId: { $nin: bannedBlogsIds }
     // }, { __v: false })
-    const post: SQLPostViewModel = await this.dataSource.query(`
-    SELECT * FROM public."Posts"
-    WHERE id = $1
-    `, [postId])
-    if(!post[0]){
+    // const post: SQLPostViewModel = await this.dataSource.query(`
+    // SELECT * FROM public."Posts"
+    // WHERE id = $1
+    // `, [postId])
+    const post = await this.postRepository.findOneBy({id: postId})
+    if(!post){
       throw new NotFoundException()
     }
     const postLikesAndDislikes = await this.getPostLikesAndDislikesById(postId)
@@ -84,13 +91,13 @@ export class PostQueryRepository {
     const likesCount = filteredLikesAndDislikes.likesCount
     const dislikesCount = filteredLikesAndDislikes.dislikesCount
 
-    const rest = {...post[0], extendedLikesInfo: {likesCount: likesCount, dislikesCount: dislikesCount, 
+    const rest = {...post, extendedLikesInfo: {likesCount: likesCount, dislikesCount: dislikesCount, 
     myStatus: likeStatus, newestLikes: newestLikes }, likesAndDislikesCount: undefined, likesAndDislikes: undefined}
 
     return rest
   }
 
-  public async editPostToViewModel(post: Paginator<SQLPostViewModel>, userId: string, bannedUserIds: string[]): Promise<Paginator<PostViewModel>>  {
+  public async editPostToViewModel(post: Paginator<PostEntity>, userId: string, bannedUserIds: string[]): Promise<Paginator<PostViewModel>>  {
     const newArray: Paginator<PostViewModel> = {
       ...post,
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -174,20 +181,21 @@ export class PostQueryRepository {
   }
 
   // query repo shouldnt return document
-  async getPostgByIdNoView(postId: string): Promise<SQLPostViewModel | null> {
+  async getPostgByIdNoView(postId: string): Promise<PostEntity | null> {
     // const post = await this.postModel.findById(postId)
     // if(!post){
     //   return null
     // }
     // return post
-    const post: SQLPostViewModel = await this.dataSource.query(`
-    SELECT * FROM public."Posts"
-    WHERE id = $1
-    `, [postId])
-    if(!post[0]){
+    // const post: SQLPostViewModel = await this.dataSource.query(`
+    // SELECT * FROM public."Posts"
+    // WHERE id = $1
+    // `, [postId])
+    const post = await this.postRepository.findOneBy({id: postId})
+    if(!post){
       return null
     }
-    return post[0]
+    return post
   }
 
   async getPostsForSpecifiedBlog(blogId: string, params: QueryParamsModel, userId: string | null, bannedUserIds: string[]): Promise<Paginator<PostViewModel>>{
@@ -197,19 +205,31 @@ export class PostQueryRepository {
     // .sort({[query.sortBy]: query.sortDirection === 'asc' ? 1 : -1})
     // .skip(skip)
     // .limit(query.pageSize).lean()
-    const posts: SQLPostViewModel[] = await this.dataSource.query(`
-    SELECT * FROM public."Posts" p
-    WHERE "blogId" = $1
-    ORDER BY p."${query.sortBy}" COLLATE "C" ${query.sortDirection}
-    OFFSET $2
-    LIMIT $3
-    `, [blogId, skip, query.pageSize])
-    const count = await this.dataSource.query(`
-      SELECT COUNT(*) FROM public."Posts" p
-      WHERE "blogId" = $1
-    `,[blogId])
+    // const posts: SQLPostViewModel[] = await this.dataSource.query(`
+    // SELECT * FROM public."Posts" p
+    // WHERE "blogId" = $1
+    // ORDER BY p."${query.sortBy}" COLLATE "C" ${query.sortDirection}
+    // OFFSET $2
+    // LIMIT $3
+    // `, [blogId, skip, query.pageSize])
+    // const count = await this.dataSource.query(`
+    //   SELECT COUNT(*) FROM public."Posts" p
+    //   WHERE "blogId" = $1
+    // `,[blogId])
+
+    const posts = await this.postRepository
+    .createQueryBuilder('post')
+    .select()
+    .where('post."blogId" = :blogId', { blogId: blogId })
+    .orderBy(`post.${query.sortBy} COLLATE "C"`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
+    .skip(skip)
+    .take(query.pageSize)
+    .getMany()
+
+    const count = await this.countPostsForSpecBlog(blogId)
+
     const transformedPosts = posts.map(({ ...rest }) => ({ id: rest.id, ...rest }))
-    const result = Paginator.createPaginationResult(+count[0].count, query, transformedPosts)
+    const result = Paginator.createPaginationResult(count, query, transformedPosts)
     return this.editPostToViewModel(result, userId, bannedUserIds)
   }
   
@@ -302,5 +322,26 @@ export class PostQueryRepository {
     const dislikesCount = filteredLikesAndDislikes.filter(element => element.likeStatus === LikeStatuses.Dislike).length
 
     return { likesCount: likesCount, dislikesCount: dislikesCount }
+  }
+
+  private async countPostsForSpecBlog(blogId: string): Promise<number> {
+
+    const builder = this.postRepository.createQueryBuilder('post')
+      .select('COUNT(*)', 'count')
+      .where('post."blogId" = :blogId', {
+        blogId: blogId,
+      })
+
+    const result = await builder.getRawOne()
+    return +result.count
+  }
+
+  private async countAllPosts(): Promise<number> {
+
+    const builder = this.postRepository.createQueryBuilder('post')
+      .select('COUNT(*)', 'count')
+
+    const result = await builder.getRawOne()
+    return +result.count
   }
 }

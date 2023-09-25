@@ -9,6 +9,7 @@ import { PostViewModel } from "../posts/models/view/Post";
 import { BanUserForBlogInputModel } from "./models/input/BanUserForBlogInputModel";
 import { BlogBannedUsers } from "./models/schemas/BlogBannedUsers";
 import { SQLPostInputModel } from "../posts/models/input/SQLPost";
+import { DeleteResult, UpdateResult } from "typeorm";
 
 @Injectable()
 export class BlogService {
@@ -38,18 +39,18 @@ export class BlogService {
     return result
   }
 
-  async deleteBlogById(id: string, userId: string): Promise<boolean> {
+  async deleteBlogById(id: string, userId: string): Promise<DeleteResult> {
     await this.validateBlogUser(id, userId)
     const result = await this.blogRepository.deleteBlogById(id)
     // throw error after getting blog above?
-    if(!result){
+    if(result.affected === 0){
       throw new NotFoundException()
     }
     
     return result
   }
 
-  async updateBlogById(id: string, newblog: BlogInputModel, userId: string): Promise<boolean> {
+  async updateBlogById(id: string, newblog: BlogInputModel, userId: string): Promise<UpdateResult> {
     await this.validateBlogUser(id, userId)
     const isUpdated = await this.blogRepository.updateBlogById(id, newblog)
     // throw error after getting blog above?
