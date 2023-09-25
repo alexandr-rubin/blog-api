@@ -116,7 +116,7 @@ import { DeviceEntity } from './models/device.entity';
       global: true,
       // через конфиг когда добавлю отдельный модуль 
       secret: process.env.JWT_SECRET_KEY,
-      signOptions: { expiresIn: '10s' },
+      signOptions: { expiresIn: '10m' },
     }),
 
     TypeOrmModule.forRootAsync({
