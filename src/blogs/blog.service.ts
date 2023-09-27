@@ -57,6 +57,8 @@ export class BlogService {
     if(!isUpdated){
       throw new NotFoundException()
     }
+
+    await this.blogRepository.updatePostBlogName(id, newblog.name)
     return isUpdated
   }
 

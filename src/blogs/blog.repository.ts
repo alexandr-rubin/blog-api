@@ -99,6 +99,10 @@ export class BlogRepository {
     return await this.blogRepository.update( { id: id }, blog)
   }
 
+  async updatePostBlogName(blogId: string, blogName: string): Promise<UpdateResult> {
+    return await this.postRepository.update( { blogId: blogId }, {blogName: blogName})
+  }
+
   async deleteBlogsTesting(): Promise<boolean> {
     // const result = await this.blogModel.deleteMany({})
     // return !!result

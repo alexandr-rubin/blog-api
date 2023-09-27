@@ -1,11 +1,10 @@
 import { PostEntity } from "../../posts/entities/post.entity"
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
-import { UUID } from "typeorm/driver/mongodb/bson.typings"
 
 @Entity('Comments')
 export class CommentEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: UUID
+  id: string
   @Column()
   content: string
   @Column('jsonb')
@@ -15,7 +14,7 @@ export class CommentEntity {
   @ManyToOne(() => PostEntity)
   post: PostEntity
   @Column('uuid')
-  postId: UUID
+  postId: string
   @Column('jsonb')
   likesAndDislikesCount: { likesCount: number, dislikesCount: number }
 }

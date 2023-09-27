@@ -3,7 +3,7 @@ import { NotFoundException } from "@nestjs/common";
 import { LikeStatuses } from "../../helpers/likeStatuses";
 import { CommentRepository } from "../comment.repository";
 import { CommentQueryRepository } from "../comment.query-repository";
-import { SQLComment } from "../models/view/SQLCommentViewModel";
+import { CommentEntity } from "../entities/comment.entity";
 
 export class UpdateCommentLikeStatusCommand {
   constructor(public commentId: string, public likeStatus: string, public userId:string) {}
@@ -69,9 +69,9 @@ export class UpdateCommentLikeStatusUseCase implements ICommandHandler<UpdateCom
     return true
   }
 
-  private async firstLike(comment: SQLComment, likeStatus: string, userId: string) {
-    const commentLike = {userId: userId, addedAt: new Date().toISOString(), likeStatus: likeStatus}
-    await this.commentRepository.updateFirstLike(commentLike, comment.id)
+  private async firstLike(comment: CommentEntity, likeStatus: string, userId: string) {
+    const commentLike = {userId: userId, addedAt: new Date().toISOString(), likeStatus: likeStatus, commentId: comment.id}
+    await this.commentRepository.updateFirstLike(commentLike)
     if(likeStatus === LikeStatuses.Like){
       await this.commentRepository.incLike(comment.id)
     }

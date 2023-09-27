@@ -30,7 +30,7 @@ export class CommentController {
     if(bearer){
       userId = await this.jwtAuthService.verifyToken(bearer)
     }
-
+    
     const bannedUserIds = await this.userQueryRepository.getBannedUsersId()
 
     return await this.commentQueryRepository.getCommentById(id, userId, bannedUserIds)

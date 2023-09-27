@@ -56,8 +56,8 @@ export class UpdatePostLikeStatusUseCase implements ICommandHandler<UpdatePostLi
     if(likeStatus === LikeStatuses.None){
       return true
     }
-    const postLike = {userId: userId, login: login, addedAt: new Date().toISOString(), likeStatus: likeStatus}
-    await this.postRepository.updateFirstLike(post.id, postLike)
+    const postLike = {userId: userId, login: login, addedAt: new Date().toISOString(), likeStatus: likeStatus, postId: post.id}
+    await this.postRepository.updateFirstLike(postLike)
     if(likeStatus === LikeStatuses.Like){
       await this.postRepository.incLike(post.id)
     }

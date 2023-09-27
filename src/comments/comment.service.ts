@@ -2,34 +2,37 @@ import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/commo
 import { CommentQueryRepository } from "./comment.query-repository";
 import { CommentRepository } from "./comment.repository";
 import { CommentInputModel } from "./models/input/CommentInputModel";
+import { CommentEntity } from "./entities/comment.entity";
+import { DeleteResult } from "typeorm";
 
 @Injectable()
 export class CommentService {
   constructor(private commentRepository: CommentRepository, private commentQueryRepository: CommentQueryRepository){}
 
-  async deleteCommentById(id: string, userId: string): Promise<boolean> {
+  async deleteCommentById(id: string, userId: string): Promise<DeleteResult> {
     const comment = await this.commentQueryRepository.getCommentByIdNoView(id)
     if(comment && comment.commentatorInfo.userId !== userId){
       throw new ForbiddenException()
     }
     
     const isDeleted = await this.commentRepository.deleteCommentById(id)
-    if(!isDeleted){
+    if(isDeleted.affected === 0){
       throw new NotFoundException()
     }
     return isDeleted
   }
 
-  async updateCommentById(id: string, newComment: CommentInputModel, userId: string): Promise<boolean> {
+  async updateCommentById(id: string, newComment: CommentInputModel, userId: string): Promise<CommentEntity> {
     const comment = await this.commentQueryRepository.getCommentByIdNoView(id)
     if(comment && comment.commentatorInfo.userId !== userId){
       throw new ForbiddenException()
     }
-    const isUpdated = await this.commentRepository.updateCommentById(id, newComment)
-    if(!isUpdated){
+    comment.content = newComment.content
+    const updatedComment = await this.commentRepository.updateCommentById(comment)
+    if(!updatedComment){
       throw new NotFoundException()
     }
-    return isUpdated
+    return updatedComment
   }
 
   async deleteCommentTesting(): Promise<boolean> {

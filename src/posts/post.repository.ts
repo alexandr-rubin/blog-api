@@ -1,20 +1,20 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { Comment, CommentDocument } from "../comments/models/schemas/Comment";
 import { Post, PostDocument, PostLike } from "./models/schemas/Post";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { DataSource, DeleteResult, Repository } from "typeorm";
 import { SQLCommentInputModel } from "../comments/models/input/SQLCommentInputModel";
 import { PostEntity } from "./entities/post.entity";
 import { PostLikesAndDislikesEntity } from "./entities/post-likes-and-dislikes.entity";
+import { CommentEntity } from "../comments/entities/comment.entity";
 
 @Injectable()
 export class PostRepository {
-  constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>,
-  @InjectModel(Comment.name) private commentModel: Model<CommentDocument>, @InjectDataSource() protected dataSource: DataSource,
+  constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>, @InjectDataSource() protected dataSource: DataSource,
   @InjectRepository(PostEntity) private readonly postRepository: Repository<PostEntity>, 
-  @InjectRepository(PostLikesAndDislikesEntity) private readonly postLikesAndDislikesRepository: Repository<PostLikesAndDislikesEntity>){}
+  @InjectRepository(PostLikesAndDislikesEntity) private readonly postLikesAndDislikesRepository: Repository<PostLikesAndDislikesEntity>,
+  @InjectRepository(CommentEntity) private readonly commentRepository: Repository<CommentEntity>){}
 
   async addPost(post: Post): Promise<PostDocument>{
     const newPost = new this.postModel(post)
@@ -26,21 +26,22 @@ export class PostRepository {
     // const newComment = new this.commentModel(comment)
     // await newComment.save()
     // return newComment
-    const newBlog = await this.dataSource.query(`
-    INSERT INTO public."Comments"(
-      id, content, "commentatorInfo", "createdAt", "postId", "likesAndDislikesCount")
-      VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5)
-      RETURNING id
-    `,
-    [
-      comment.content,
-      comment.commentatorInfo,
-      comment.createdAt,
-      comment.postId,
-      comment.likesAndDislikesCount
-    ])
+    // const newBlog = await this.dataSource.query(`
+    // INSERT INTO public."Comments"(
+    //   id, content, "commentatorInfo", "createdAt", "postId", "likesAndDislikesCount")
+    //   VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5)
+    //   RETURNING id
+    // `,
+    // [
+    //   comment.content,
+    //   comment.commentatorInfo,
+    //   comment.createdAt,
+    //   comment.postId,
+    //   comment.likesAndDislikesCount
+    // ])
 
-    return newBlog[0].id
+    // return newBlog[0].id
+    return (await this.commentRepository.save(comment)).id
   }
 
   private async deleteCommentsForPost(postId: string) {
@@ -109,11 +110,12 @@ export class PostRepository {
     `)
   }
 
-  async updateFirstLike(postId: string, postLike: PostLike) {
-    return await this.dataSource.query(`
-    INSERT INTO public."PostLikesAndDislikes"(
-      id, "userId", login, "addedAt", "likeStatus", "postId")
-      VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5)`, [postLike.userId, postLike.login, postLike.addedAt, postLike.likeStatus, postId])
+  async updateFirstLike(postLike: PostLike) {
+    // return await this.dataSource.query(`
+    // INSERT INTO public."PostLikesAndDislikes"(
+    //   id, "userId", login, "addedAt", "likeStatus", "postId")
+    //   VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5)`, [postLike.userId, postLike.login, postLike.addedAt, postLike.likeStatus, postId])
+    return (await this.postLikesAndDislikesRepository.save(postLike)).id
   }
   
   // async updateNoneLikeStatusLike(likeStatus:string, postId: string, userId: string){
@@ -152,68 +154,97 @@ export class PostRepository {
   // }
 
   async incLike(postId: string){
-    // await this.postModel.updateOne({_id: postId}, {$inc: {'likesAndDislikesCount.likesCount': 1} })
-    return await this.dataSource.query(`
-    UPDATE public."Posts"
-    SET
-      "likesAndDislikesCount" = jsonb_set(
-        "likesAndDislikesCount",
-        '{likesCount}',
-        (COALESCE("likesAndDislikesCount"->>'likesCount'::text, '0')::int + 1)::text::jsonb
-      )
-    WHERE "id" = $1`, [postId])
+    // return await this.dataSource.query(`
+    // UPDATE public."Posts"
+    // SET
+    //   "likesAndDislikesCount" = jsonb_set(
+    //     "likesAndDislikesCount",
+    //     '{likesCount}',
+    //     (COALESCE("likesAndDislikesCount"->>'likesCount'::text, '0')::int + 1)::text::jsonb
+    //   )
+    // WHERE "id" = $1`, [postId])
+    await this.postRepository
+      .createQueryBuilder()
+      .update()
+      .set({
+        likesAndDislikesCount: () => `jsonb_set("likesAndDislikesCount", '{likesCount}', COALESCE(("likesAndDislikesCount"->>'likesCount')::int + 1, '0')::text::jsonb)`
+      })
+      .where('id = :postId', { postId })
+      .execute()
   }
 
   async incDisLike(postId: string){
-    // await this.postModel.updateOne({_id: postId}, {$inc: {'likesAndDislikesCount.dislikesCount': 1} })
-    return await this.dataSource.query(`
-    UPDATE public."Posts"
-    SET
-      "likesAndDislikesCount" = jsonb_set(
-        "likesAndDislikesCount",
-        '{dislikesCount}',
-        (COALESCE("likesAndDislikesCount"->>'dislikesCount'::text, '0')::int + 1)::text::jsonb
-      )
-    WHERE "id" = $1`, [postId])
+    // await this.dataSource.query(`
+    // UPDATE public."Posts"
+    // SET
+    //   "likesAndDislikesCount" = jsonb_set(
+    //     "likesAndDislikesCount",
+    //     '{dislikesCount}',
+    //     (COALESCE("likesAndDislikesCount"->>'dislikesCount'::text, '0')::int + 1)::text::jsonb
+    //   )
+    // WHERE "id" = $1`, [postId])
+    await this.postRepository
+      .createQueryBuilder()
+      .update()
+      .set({
+        likesAndDislikesCount: () => `"likesAndDislikesCount" || jsonb_build_object('dislikesCount', COALESCE("likesAndDislikesCount"->>'dislikesCount', '0')::int + 1)`,
+      })
+      .where('id = :postId', { postId })
+      .execute()
   }
 
   async decLike(postId: string){
-    // await this.postModel.updateOne({_id: postId}, {$inc: {'likesAndDislikesCount.likesCount': -1} })
-    return await this.dataSource.query(`
-    UPDATE public."Posts"
-    SET
-      "likesAndDislikesCount" = jsonb_set(
-        "likesAndDislikesCount",
-        '{likesCount}',
-        (COALESCE("likesAndDislikesCount"->>'likesCount'::text, '0')::int - 1)::text::jsonb
-      )
-    WHERE "id" = $1`, [postId])
+    // await this.dataSource.query(`
+    // UPDATE public."Posts"
+    // SET
+    //   "likesAndDislikesCount" = jsonb_set(
+    //     "likesAndDislikesCount",
+    //     '{likesCount}',
+    //     (COALESCE("likesAndDislikesCount"->>'likesCount'::text, '0')::int - 1)::text::jsonb
+    //   )
+    // WHERE "id" = $1`, [postId])
+
+    await this.commentRepository
+      .createQueryBuilder()
+      .update()
+      .set({
+        likesAndDislikesCount: () => `"likesAndDislikesCount" || jsonb_build_object('likesCount', COALESCE("likesAndDislikesCount"->>'likesCount', '0')::int - 1)`,
+      })
+      .where('id = :postId', { postId })
+      .execute()
   }
 
   async decDisLike(postId: string){
-    // await this.postModel.updateOne({_id: postId}, {$inc: {'likesAndDislikesCount.dislikesCount': -1} })
-    return await this.dataSource.query(`
-    UPDATE public."Posts"
-    SET
-      "likesAndDislikesCount" = jsonb_set(
-        "likesAndDislikesCount",
-        '{dislikesCount}',
-        (COALESCE("likesAndDislikesCount"->>'dislikesCount'::text, '0')::int - 1)::text::jsonb
-      )
-    WHERE "id" = $1`, [postId])
+    // return await this.dataSource.query(`
+    // UPDATE public."Posts"
+    // SET
+    //   "likesAndDislikesCount" = jsonb_set(
+    //     "likesAndDislikesCount",
+    //     '{dislikesCount}',
+    //     (COALESCE("likesAndDislikesCount"->>'dislikesCount'::text, '0')::int - 1)::text::jsonb
+    //   )
+    // WHERE "id" = $1`, [postId])
+    await this.postRepository
+      .createQueryBuilder()
+      .update()
+      .set({
+        likesAndDislikesCount: () => `"likesAndDislikesCount" || jsonb_build_object('dislikesCount', COALESCE("likesAndDislikesCount"->>'dislikesCount', '0')::int - 1)`,
+      })
+      .where('id = :postId', { postId })
+      .execute();
   }
 
   async updatePostLikeStatus(postId: string, userId: string, likeStatus: string) {
-    // post.markModified('likesAndDislikes')
-    // await post.save()
-    return await this.dataSource.query(`
-    UPDATE public."PostLikesAndDislikes"
-    SET
-      "likeStatus" = $1
-    WHERE "postId" = $2 AND "userId" = $3`,
-    [
-      likeStatus, postId, userId
-    ])
+    // return await this.dataSource.query(`
+    // UPDATE public."PostLikesAndDislikes"
+    // SET
+    //   "likeStatus" = $1
+    // WHERE "postId" = $2 AND "userId" = $3`,
+    // [
+    //   likeStatus, postId, userId
+    // ])
+
+    return await this.postLikesAndDislikesRepository.update( { postId: postId, userId: userId }, {likeStatus: likeStatus})
   }
 
   // async getPostDocument(postId): Promise<PostDocument> {
