@@ -9,7 +9,6 @@ import { Blog, BlogDocument } from "./models/schemas/Blog";
 import { BlogBannedUsers, BlogBannedUsersDocument } from "./models/schemas/BlogBannedUsers";
 import { DataSource, Repository } from "typeorm";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
-import { SQLBlog } from "./models/view/SQLBlogViewModel";
 import { BlogEntity } from "./entities/blog.entity";
 
 @Injectable()
@@ -81,14 +80,16 @@ export class BlogQueryRepository {
     //   return null
     // }
     // return blog
-    const blog: SQLBlog = await this.dataSource.query(`
-    SELECT * FROM public."Blogs"
-    WHERE id = $1
-    `, [blogId])
-    if(!blog[0]){
+    // const blog: SQLBlog = await this.dataSource.query(`
+    // SELECT * FROM public."Blogs"
+    // WHERE id = $1
+    // `, [blogId])
+    const blog = await this.blogRepository.findOneBy({id: blogId})
+    
+    if(!blog){
       return null
     }
-    return blog[0]
+    return blog
   }
 
   async getBannedBlogsId(): Promise<string[]> {

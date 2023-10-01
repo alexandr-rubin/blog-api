@@ -1,26 +1,24 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
 import { Paginator } from "../models/Paginator";
 import { QueryParamsModel } from "../models/PaginationQuery";
 import { createPaginationQuery } from "../helpers/pagination";
 import { LikeStatuses } from "../helpers/likeStatuses";
 import { CommentViewModel } from "../comments/models/view/CommentViewModel";
-import { Comment, CommentDocument } from "../comments/models/schemas/Comment";
 import { PostViewModel } from "./models/view/Post";
-import { PostDocument, Post, PostLike } from "./models/schemas/Post";
+import { PostLike } from "./models/schemas/Post";
 import { CommentLike } from "../comments/models/schemas/CommentLike";
 import { DataSource, Repository } from "typeorm";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { SQLPostViewModel } from "./models/view/SQLPost";
-import { UUID } from "crypto";
-import { SQLComment } from "../comments/models/view/SQLCommentViewModel";
 import { PostEntity } from "./entities/post.entity";
+import { PostLikesAndDislikesEntity } from "./entities/post-likes-and-dislikes.entity";
+import { CommentEntity } from "../comments/entities/comment.entity";
 
 @Injectable()
 export class PostQueryRepository {
-  constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>, @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
-  @InjectDataSource() protected dataSource: DataSource, @InjectRepository(PostEntity) private readonly postRepository: Repository<PostEntity>){}
+  constructor(@InjectDataSource() protected dataSource: DataSource, @InjectRepository(PostEntity) private readonly postRepository: Repository<PostEntity>,
+  @InjectRepository(PostLikesAndDislikesEntity) private readonly postLikesAndDislikesRepository: Repository<PostLikesAndDislikesEntity>,
+  @InjectRepository(CommentEntity) private readonly commentRepository: Repository<CommentEntity>){}
 
   async getPosts(params: QueryParamsModel, userId: string, bannedUserIds: string[], bannedBlogsIds: string[]): Promise<Paginator<PostViewModel>> {
     // fix
@@ -140,21 +138,27 @@ export class PostQueryRepository {
   }
 
   async getPostLikesAndDislikesById(postId: string){
-    const likesAndDislikes = await this.dataSource.query(`
-      SELECT "userId", login, "addedAt", "likeStatus" FROM public."PostLikesAndDislikes"
-      WHERE "postId" = $1
-    `, [postId])
+    // const likesAndDislikes = await this.dataSource.query(`
+    //   SELECT "userId", login, "addedAt", "likeStatus" FROM public."PostLikesAndDislikes"
+    //   WHERE "postId" = $1
+    // `, [postId])
+    const likesAndDislikes = await this.postLikesAndDislikesRepository
+    .createQueryBuilder('likes')
+    .select(['likes.userId', 'likes.login', 'likes.addedAt', 'likes.likeStatus'])
+    .where('likes."postId" = :postId', { postId: postId })
+    .getMany()
 
     return likesAndDislikes
   }
   
   async getCommentsForSpecifiedPost(postId: string, params: QueryParamsModel, userId: string, bannedUserIds: string[]): Promise<Paginator<CommentViewModel> | null>{
     //const isFinded = await this.postModel.findById(postId)
-    const isFinded = await this.dataSource.query(`
-      SELECT * FROM public."Posts"
-      WHERE "id" = $1
-    `,[postId])
-    if(!isFinded[0]){
+    // const isFinded = await this.dataSource.query(`
+    //   SELECT * FROM public."Posts"
+    //   WHERE "id" = $1
+    // `,[postId])
+    const isFinded = await this.getPostgByIdNoView(postId)
+    if(!isFinded){
       throw new NotFoundException()
     }
     const query = createPaginationQuery(params)
@@ -164,18 +168,29 @@ export class PostQueryRepository {
     // .skip(skip)
     // .limit(query.pageSize).lean()
     // const count = await this.commentModel.countDocuments({postId: postId, 'commentatorInfo.userId': { $nin: bannedUserIds }})
-    const comments: SQLComment[] = await this.dataSource.query(`
-    SELECT * FROM public."Comments" c
-    WHERE "postId" = $1
-    ORDER BY c."${query.sortBy}" COLLATE "C" ${query.sortDirection}
-    OFFSET $2
-    LIMIT $3
-    `, [postId, skip, query.pageSize])
-    const count = await this.dataSource.query(`
-      SELECT COUNT(*) FROM public."Comments"
-      WHERE "postId" = $1
-    `,[postId])
-    const result = Paginator.createPaginationResult(+count[0].count, query, comments)
+    // const comments: SQLComment[] = await this.dataSource.query(`
+    // SELECT * FROM public."Comments" c
+    // WHERE "postId" = $1
+    // ORDER BY c."${query.sortBy}" COLLATE "C" ${query.sortDirection}
+    // OFFSET $2
+    // LIMIT $3
+    // `, [postId, skip, query.pageSize])
+    const comments: CommentEntity[] = await this.commentRepository.createQueryBuilder('c')
+      .where('c.postId = :postId', { postId })
+      .orderBy(`c.${query.sortBy}`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
+      .offset(skip)
+      .limit(query.pageSize)
+      .getMany()
+
+    // const count = await this.dataSource.query(`
+    //   SELECT COUNT(*) FROM public."Comments"
+    //   WHERE "postId" = $1
+    // `,[postId])
+    const count = await this.commentRepository.createQueryBuilder('c')
+      .where('c.postId = :postId', { postId })
+      .getCount()
+
+    const result = Paginator.createPaginationResult(count, query, comments)
 
     return await this.editCommentToViewModel(result, userId, bannedUserIds)
   }
@@ -242,7 +257,7 @@ export class PostQueryRepository {
     // const comments = await this.commentModel.find(filter, {__v: false}).sort({[query.sortBy]: query.sortDirection === 'asc' ? 1 : -1})
     // .skip(skip)
     // .limit(query.pageSize).lean()
-    const comments: SQLComment[] = await this.dataSource.query(`
+    const comments: CommentEntity[] = await this.dataSource.query(`
     SELECT * FROM public."Comments"
     WHERE "postId" IN $1 and ("commentatorInfo"->>'userId')::int NOT IN ($2)
     ORDER BY p."${query.sortBy}" COLLATE "C" ${query.sortDirection}
@@ -283,7 +298,7 @@ export class PostQueryRepository {
     return posts
   }
 
-  private async editCommentToViewModel(comment: Paginator<SQLComment>, userId: string, bannedUserIds: string[]): Promise<Paginator<CommentViewModel>> {
+  private async editCommentToViewModel(comment: Paginator<CommentEntity>, userId: string, bannedUserIds: string[]): Promise<Paginator<CommentViewModel>> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const newArray = {...comment, items: comment.items.map(({postId, likesAndDislikesCount, ...rest }) => ({
         ...rest, commentatorInfo: {userId: rest.commentatorInfo.userId, userLogin: rest.commentatorInfo.userLogin},
@@ -306,7 +321,7 @@ export class PostQueryRepository {
     return newArray
   }
 
-  async getCommentLikesAndDislikesById(commentId: UUID){
+  async getCommentLikesAndDislikesById(commentId: string){
     const likesAndDislokes = await this.dataSource.query(`
       SELECT "userId", "addedAt", "likeStatus" FROM public."CommentLikesAndDislikes"
       WHERE "commentId" = $1
