@@ -12,18 +12,12 @@ export class CommentQueryRepository {
   @InjectRepository(CommentLikesAndDislikesEntity) private readonly commentLikesAndDislikesRepository: Repository<CommentLikesAndDislikesEntity>){}
 
   async getCommentById(commentId: string, userId: string, bannedUserIds: string[]): Promise<CommentViewModel> {
-    // const comment = await this.commentModel.findById(commentId, { __v: false, postId: false }).lean()
-    // const comment: SQLComment[] = await this.dataSource.query(`
-    // SELECT * FROM public."Comments"
-    // WHERE id = $1
-    // `, [commentId])
     const comment: CommentEntity = await this.commentRepository.findOneBy({id: commentId})
     if (!comment || bannedUserIds.includes(comment.commentatorInfo.userId)){
       throw new NotFoundException('Comment not found')
     }
     const commentLikes = await this.getCommentLikesAndDislikesById(comment.id)
     const like = commentLikes.find(like => like.userId === userId && !bannedUserIds.includes(like.userId))
-    // const like = await this.commentLikeModel.findOne({commentId: commentId , userId: userId}).lean()
     const likeStatus = like === undefined ? LikeStatuses.None : like.likeStatus
     // 
     const filteredLikesAndDislikes = commentLikes
@@ -37,15 +31,6 @@ export class CommentQueryRepository {
   }
 
   async getCommentByIdNoView(commentId: string): Promise<CommentEntity | null> {
-    // const comment = await this.commentModel.findById(commentId)
-    // if (!comment){
-    //   return null
-    // }
-    // return comment
-    // const comment: SQLComment = await this.dataSource.query(`
-    // SELECT * FROM public."Comments"
-    // WHERE id = $1
-    // `, [commentId])
     const comment: CommentEntity = await this.commentRepository.findOneBy({id: commentId})
     if(!comment){
       return null
@@ -54,10 +39,6 @@ export class CommentQueryRepository {
   }
 
   async getCommentLikesAndDislikesById(commentId: string){
-    // const likesAndDislokes = await this.dataSource.query(`
-    //   SELECT "userId", "addedAt", "likeStatus" FROM public."CommentLikesAndDislikes"
-    //   WHERE "commentId" = $1
-    // `, [commentId])
     const likesAndDislikes = await this.commentLikesAndDislikesRepository
     .createQueryBuilder('likes')
     .select(['likes.userId','likes.addedAt', 'likes.likeStatus'])

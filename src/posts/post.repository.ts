@@ -23,24 +23,6 @@ export class PostRepository {
   }
 
   async createComment(comment: SQLCommentInputModel){
-    // const newComment = new this.commentModel(comment)
-    // await newComment.save()
-    // return newComment
-    // const newBlog = await this.dataSource.query(`
-    // INSERT INTO public."Comments"(
-    //   id, content, "commentatorInfo", "createdAt", "postId", "likesAndDislikesCount")
-    //   VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5)
-    //   RETURNING id
-    // `,
-    // [
-    //   comment.content,
-    //   comment.commentatorInfo,
-    //   comment.createdAt,
-    //   comment.postId,
-    //   comment.likesAndDislikesCount
-    // ])
-
-    // return newBlog[0].id
     return (await this.commentRepository.save(comment)).id
   }
 
@@ -64,44 +46,20 @@ export class PostRepository {
   }
 
   async deletePostById(id: string): Promise<DeleteResult> {
-    // const result = await this.postModel.findByIdAndDelete(id)
-    // return !!result
     await this.deleteCommentsForPost(id)
-    // await this.dataSource.query(`
-    // DELETE FROM public."PostLikesAndDislikes"
-    // WHERE "postId" = $1
-    // `,[id])
     await this.postLikesAndDislikesRepository
     .createQueryBuilder()
     .delete()
     .where('"postId" = :id', { id: id })
-    .execute();
-    // const post = await this.dataSource.query(`
-    // DELETE FROM public."Posts"
-    // WHERE id = $1
-    // `, [id])
-    // return post[0]
+    .execute()
     return await this.postRepository.delete(id)
   }
 
   async updatePostById(post: PostEntity): Promise<PostEntity> {
-    // const save = (await post.save()).toJSON()
-    // return save
-    // return await this.dataSource.query(`
-    // UPDATE public."Posts"
-    // SET
-    //   title = $1, "shortDescription" = $2, content = $3
-    //   WHERE "id" = $4`,
-    // [
-    //   post.title, post.shortDescription, post.content, post.id
-    // ])
-
     return await this.postRepository.save(post)
   }
 
   async deletePostsTesting(): Promise<boolean> {
-    // const result = await this.postModel.deleteMany({})
-    // return !!result
     await this.dataSource.query(`
     DELETE FROM public."PostLikesAndDislikes"
     `)
@@ -111,58 +69,10 @@ export class PostRepository {
   }
 
   async updateFirstLike(postLike: PostLike) {
-    // return await this.dataSource.query(`
-    // INSERT INTO public."PostLikesAndDislikes"(
-    //   id, "userId", login, "addedAt", "likeStatus", "postId")
-    //   VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5)`, [postLike.userId, postLike.login, postLike.addedAt, postLike.likeStatus, postId])
     return (await this.postLikesAndDislikesRepository.save(postLike)).id
   }
-  
-  // async updateNoneLikeStatusLike(likeStatus:string, postId: string, userId: string){
-  //   await this.decLike(postId)
-  //   await this.updatePostLikeStatus(postId, likeStatus, userId)
-
-  //   return true
-  // }
-
-  // async updateNoneLikeStatusDislike(likeStatus:string, postId: string, userId: string){
-  //   await this.decDisLike(postId)
-  //   await this.updatePostLikeStatus(postId, likeStatus, userId)
-
-  //   return true
-  // }
-
-  // async updateLikeStatus(likeLikeStatus: string, likeStatus: string, postId: string, userId: string) {
-  //   if(likeLikeStatus === LikeStatuses.None){
-  //     if(likeStatus === LikeStatuses.Like){
-  //       await this.incLike(postId)
-  //     }
-  //     else{
-  //       await this.incDisLike(postId)
-  //     }
-  //   }
-  //   else if(likeStatus === LikeStatuses.Like){
-  //       await this.incLike(postId)
-  //       await this.decDisLike(postId)
-  //   }
-  //   else{
-  //       await this.decLike(postId)
-  //       await this.incDisLike(postId)
-  //   }
-  //   await this.updatePostLikeStatus(postId, likeStatus, userId)
-  //   return true
-  // }
 
   async incLike(postId: string){
-    // return await this.dataSource.query(`
-    // UPDATE public."Posts"
-    // SET
-    //   "likesAndDislikesCount" = jsonb_set(
-    //     "likesAndDislikesCount",
-    //     '{likesCount}',
-    //     (COALESCE("likesAndDislikesCount"->>'likesCount'::text, '0')::int + 1)::text::jsonb
-    //   )
-    // WHERE "id" = $1`, [postId])
     await this.postRepository
       .createQueryBuilder()
       .update()
@@ -174,15 +84,6 @@ export class PostRepository {
   }
 
   async incDisLike(postId: string){
-    // await this.dataSource.query(`
-    // UPDATE public."Posts"
-    // SET
-    //   "likesAndDislikesCount" = jsonb_set(
-    //     "likesAndDislikesCount",
-    //     '{dislikesCount}',
-    //     (COALESCE("likesAndDislikesCount"->>'dislikesCount'::text, '0')::int + 1)::text::jsonb
-    //   )
-    // WHERE "id" = $1`, [postId])
     await this.postRepository
       .createQueryBuilder()
       .update()
@@ -194,16 +95,6 @@ export class PostRepository {
   }
 
   async decLike(postId: string){
-    // await this.dataSource.query(`
-    // UPDATE public."Posts"
-    // SET
-    //   "likesAndDislikesCount" = jsonb_set(
-    //     "likesAndDislikesCount",
-    //     '{likesCount}',
-    //     (COALESCE("likesAndDislikesCount"->>'likesCount'::text, '0')::int - 1)::text::jsonb
-    //   )
-    // WHERE "id" = $1`, [postId])
-
     await this.commentRepository
       .createQueryBuilder()
       .update()
@@ -215,15 +106,6 @@ export class PostRepository {
   }
 
   async decDisLike(postId: string){
-    // return await this.dataSource.query(`
-    // UPDATE public."Posts"
-    // SET
-    //   "likesAndDislikesCount" = jsonb_set(
-    //     "likesAndDislikesCount",
-    //     '{dislikesCount}',
-    //     (COALESCE("likesAndDislikesCount"->>'dislikesCount'::text, '0')::int - 1)::text::jsonb
-    //   )
-    // WHERE "id" = $1`, [postId])
     await this.postRepository
       .createQueryBuilder()
       .update()
@@ -235,21 +117,6 @@ export class PostRepository {
   }
 
   async updatePostLikeStatus(postId: string, userId: string, likeStatus: string) {
-    // return await this.dataSource.query(`
-    // UPDATE public."PostLikesAndDislikes"
-    // SET
-    //   "likeStatus" = $1
-    // WHERE "postId" = $2 AND "userId" = $3`,
-    // [
-    //   likeStatus, postId, userId
-    // ])
-
     return await this.postLikesAndDislikesRepository.update( { postId: postId, userId: userId }, {likeStatus: likeStatus})
   }
-
-  // async getPostDocument(postId): Promise<PostDocument> {
-  //   const post = await this.postModel.findById(postId)
-
-  //   return post
-  // }
 }

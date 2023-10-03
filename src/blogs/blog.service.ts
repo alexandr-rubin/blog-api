@@ -18,8 +18,7 @@ export class BlogService {
   async addBlog(blog: BlogInputModel, creatorId: string): Promise<BlogViewModel>{
     const newBlog: Blog = {...blog, createdAt: new Date().toISOString(), isMembership: false, userId: creatorId, banInfo: {isBanned: false, banDate: null}}
     const id = await this.blogRepository.addBlog(newBlog)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { userId, banInfo, ...result } = {id: id.toString(), ...newBlog}
+    const result = {id: id.toString(), ...newBlog, userId: undefined, banInfo: undefined}
     return result
   }
 
@@ -34,8 +33,8 @@ export class BlogService {
     const newPost: SQLPostInputModel = {...post, blogId: blogId, blogName: blog.name, createdAt: new Date().toISOString(),
     likesAndDislikesCount: { likesCount: 0, dislikesCount: 0}}
     const id = await this.blogRepository.addPostForSpecificBlog(newPost)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { likesAndDislikesCount, ...result } = {id: id.toString(), ...newPost, extendedLikesInfo: { likesCount: 0, dislikesCount: 0, myStatus: 'None', newestLikes: [/*{ addedAt: '', login: '', userId: ''}*/]}}
+    const result = {id: id.toString(), ...newPost, extendedLikesInfo: { likesCount: 0, dislikesCount: 0, myStatus: 'None', 
+    newestLikes: [/*{ addedAt: '', login: '', userId: ''}*/]}, likesAndDislikesCount: undefined}
     return result
   }
 

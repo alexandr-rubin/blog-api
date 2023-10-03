@@ -69,12 +69,10 @@ export class UpdatePostLikeStatusUseCase implements ICommandHandler<UpdatePostLi
 
   private async updateNoneLikeStatus(likeLikeStatus: string, likeStatus: string, postId: string, userId: string) {
     if(likeLikeStatus === LikeStatuses.Like) {
-      // await this.postRepository.updateNoneLikeStatusLike(likeStatus, postId, userId)
       await this.postRepository.decLike(postId)
       await this.updatePostLikeStatus(postId, likeStatus, userId)
     }
     else if(likeLikeStatus === LikeStatuses.Dislike){
-      // await this.postRepository.updateNoneLikeStatusDislike(likeStatus, postId, userId)
       await this.postRepository.decDisLike(postId)
       await this.updatePostLikeStatus(postId, likeStatus, userId)
     }
@@ -94,12 +92,6 @@ export class UpdatePostLikeStatusUseCase implements ICommandHandler<UpdatePostLi
   }
 
   private async updatePostLikeStatus(postId: string, likeStatus: string, userId: string) {
-    // const post = await this.postRepository.getPostDocument(postId)
-    // if(!post){
-    //   throw new NotFoundException('Post is not found')
-    // }
-    // const like = post.likesAndDislikes.find(likeOrDislike => likeOrDislike.userId === userId)
-    // like.likeStatus = likeStatus
     await this.postRepository.updatePostLikeStatus(postId, userId, likeStatus)
   }
 }

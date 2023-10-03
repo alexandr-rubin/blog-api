@@ -82,9 +82,6 @@ export class UpdateCommentLikeStatusUseCase implements ICommandHandler<UpdateCom
   }
 
   private async updateCommentLikeStatus(commentId: string, likeStatus: string, userId: string) {
-    // const comment = await this.commentQueryRepository.getCommentByIdNoView(commentId)
-    // const like = comment.likesAndDislikes.find(likeOrDislike => likeOrDislike.userId === userId)
-    // like.likeStatus = likeStatus
     await this.commentRepository.updateCommentLikeStatus(likeStatus, commentId, userId)
   }
 }

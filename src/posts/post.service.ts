@@ -13,7 +13,7 @@ import { PostEntity } from "./entities/post.entity";
 import { DeleteResult } from "typeorm";
 
 @Injectable()
-export class PostService {///////////
+export class PostService {
   constructor(private postRepository: PostRepository, private blogQueryRepository: BlogQueryRepository, private postQueryRepository: PostQueryRepository){}
 
   async addPost(post: PostInputModel): Promise<PostViewModel>{
@@ -74,88 +74,12 @@ export class PostService {///////////
     likesAndDislikesCount: {likesCount: 0, dislikesCount: 0}}
 
     const commentId = await this.postRepository.createComment(comment)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {postId, likesAndDislikesCount, ...result} = 
+    const result = 
     ({id: commentId, ...comment, commentatorInfo: 
     {userId: comment.commentatorInfo.userId, userLogin: comment.commentatorInfo.userLogin}, 
     likesInfo: {likesCount: comment.likesAndDislikesCount.likesCount, 
-    dislikesCount: comment.likesAndDislikesCount.dislikesCount , myStatus: LikeStatuses.None}})
+    dislikesCount: comment.likesAndDislikesCount.dislikesCount , myStatus: LikeStatuses.None}, postId: undefined, likesAndDislikesCount: undefined})
 
     return result
   }
-
-  // private async firstLike(likeStatus: string, userId: string, post: PostDocument, login: string) {
-  //   if(likeStatus === LikeStatuses.None){
-  //     return true
-  //   }
-  //   post.likesAndDislikes.push({userId: userId, login: login, addedAt: new Date().toISOString(), likeStatus: likeStatus})
-  //   await this.postRepository.savePost(post)
-  //   if(likeStatus === LikeStatuses.Like){
-  //     await this.postRepository.incLike(post.id)
-  //   }
-  //   else{
-  //     await this.postRepository.incDisLike(post.id)
-  //   }
-  //   return true
-  // }
-
-  // private async updateNoneLikeStatus(likeLikeStatus: string, likeStatus: string, postId: string, userId: string) {
-  //   if(likeLikeStatus === LikeStatuses.Like) {
-  //     await this.postRepository.updateNoneLikeStatusLike(likeStatus, postId, userId)
-  //   }
-  //   else if(likeLikeStatus === LikeStatuses.Dislike){
-  //     await this.postRepository.updateNoneLikeStatusDislike(likeStatus, postId, userId)
-  //   }
-  //   return true
-  // }
-
-  // private async incPostLikeOrDislike(likeStatus: string, postId: string) {
-  //   if(likeStatus === LikeStatuses.None){
-  //     return
-  //   }
-  //   if(likeStatus === LikeStatuses.Like){
-  //     await this.postRepository.incLike(postId)
-  //   }
-  //   else{
-  //     await this.postRepository.incDisLike(postId)
-  //   }
-  // }
-
-  // async updatePostLikeStatus(postId: string, likeStatus: string, userId:string, login: string): Promise<boolean> {
-  //   const post = await this.postQueryRepository.getPostgByIdNoView(postId)
-  //   if(!post){
-  //     throw new NotFoundException()
-  //   }
-
-  //   const like = post.likesAndDislikes.find(likeOrDislike => likeOrDislike.userId === userId)
-
-  //   if(!like){
-  //     return await this.firstLike(likeStatus, userId, post, login)
-  //   }
-  //   if(like.likeStatus === likeStatus){
-  //     return true
-  //   }
-  //   if(likeStatus === LikeStatuses.None){
-  //     return await this.updateNoneLikeStatus(like.likeStatus, likeStatus, postId, userId)
-  //   }
-  //   if(like.likeStatus !== likeStatus){
-  //     if(like.likeStatus === LikeStatuses.None){
-  //       await this.incPostLikeOrDislike(likeStatus, postId)
-  //     }
-  //     else if(likeStatus === LikeStatuses.Like){
-  //       await this.postRepository.incLike(postId)
-  //       await this.postRepository.decDisLike(postId)
-  //     }
-  //     else{
-  //       await this.postRepository.decLike(postId)
-  //       await this.postRepository.incDisLike(postId)
-  //     }
-
-  //     await this.postRepository.updatePostLikeStatus(postId, likeStatus, userId)
-
-  //     return true
-  //   }
-
-  //   return true
-  // }
 }

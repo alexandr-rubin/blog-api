@@ -64,7 +64,6 @@ export class CommentController {
   @HttpCode(HttpStatusCode.NO_CONTENT_204)
   @Put('/:commentId/like-status')
   async updateLikeStatus(@Param('commentId', CommentIdValidationPipe) commentId: string, @Body() likeStatus: likeStatusValidation, @Req() req: AccessTokenVrifyModel) {
-    //return await this.commentService.updateCommentLike(commentId, likeStatus.likeStatus, req.user.userId)
     return await this.commandBus.execute(new UpdateCommentLikeStatusCommand(commentId, likeStatus.likeStatus, req.user.userId))
   }
 }

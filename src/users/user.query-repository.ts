@@ -34,14 +34,6 @@ export class UserQueryRepository {
     //   search["banInfo.isBanned"] = false
     // }
 
-    // const users: User[] = await this.dataSource.query(`
-    // SELECT id, login, email, "createdAt" FROM public."Users" u
-    // WHERE (COALESCE(u."login" ILIKE $1, true) OR COALESCE(u."email" ILIKE $2, true))
-    // ORDER BY u."${query.sortBy}" COLLATE "C" ${query.sortDirection}
-    // OFFSET $3
-    // LIMIT $4
-    // `, [query.searchLoginTerm ? `%${query.searchLoginTerm}%` : null, query.searchEmailTerm ? `%${query.searchEmailTerm}%` : null, skip, query.pageSize])
-
     const users = await this.userRepository
     .createQueryBuilder('user')
     .select(['user.id', 'user.login', 'user.email', 'user.createdAt'])
@@ -58,11 +50,6 @@ export class UserQueryRepository {
     .take(query.pageSize)
     .getMany()
 
-    // const count = await this.userModel.countDocuments({$or: searchTermsArray.length === 0 ? [{}] : searchTermsArray})
-    // const count = await this.dataSource.query(`
-    //   SELECT COUNT(*) FROM public."Users" u
-    //   WHERE (COALESCE(u."login" ILIKE $1, true) OR COALESCE(u."email" ILIKE $2, true))
-    // `,[query.searchLoginTerm ? `%${query.searchLoginTerm}%` : null, query.searchEmailTerm ? `%${query.searchEmailTerm}%` : null])
     const count = await this.countUsers(query)
 
     const result = Paginator.createPaginationResult(count, query, users)
@@ -85,15 +72,6 @@ export class UserQueryRepository {
   }
 
   async getUsergByIdNoView(userId: string): Promise<UserEntity | null> {
-    // const user = await this.userModel.findById(userId, { __v: false }).lean()
-    // const user: SQLUser = await this.dataSource.query(`
-    // SELECT * FROM public."Users"
-    // WHERE id = $1
-    // `, [userId])
-    // if(!user[0]){
-    //   return null
-    // }
-    // return user[0]
     const user = await this.userRepository.findOneBy({id: userId})
     if(!user){
       return null
@@ -103,15 +81,6 @@ export class UserQueryRepository {
   }
 
   async findUserByConfirmationEmailCode(code: string): Promise<UserEntity | null>{
-    // const user = await this.userModel.findOne({'confirmationEmail.confirmationCode': code})
-    // return user
-    // const user: SQLUser = await this.dataSource.query(`
-    // SELECT * FROM public."Users"
-    // WHERE "confirmationEmail"->>'confirmationCode' = $1
-    // `, [code]);
-
-    // return user[0]
-
     const user = await this.userRepository
       .createQueryBuilder('user')
       .where('"confirmationEmail"->>\'confirmationCode\' = :code', { code: code })
@@ -121,14 +90,6 @@ export class UserQueryRepository {
   }
 
   async findUserByConfirmationPasswordCode(code: string): Promise<UserEntity | null>{
-    // const user = await this.userModel.findOne({'confirmationPassword.confirmationCode': code})
-    // return user
-    // const user = await this.dataSource.query(`
-    // SELECT * FROM public."Users"
-    // WHERE "confirmationPassword"->>'confirmationCode' = $1
-    // `, [code]);
-
-    // return user[0]
 
     const user = await this.userRepository
       .createQueryBuilder('user')
@@ -139,13 +100,6 @@ export class UserQueryRepository {
   }
 
   async getUsergByEmail(email: string): Promise<UserEntity | null> {
-    // const user = await this.userModel.findOne({email: email})
-    // const user = await this.dataSource.query(`SELECT * FROM public."Users" 
-    // WHERE email = $1`, [email])
-    // if(!user[0]){
-    //   return null
-    // }
-    // return user[0]
     const user = await this.userRepository
       .createQueryBuilder('user')
       .where({ email: email })
@@ -169,14 +123,6 @@ export class UserQueryRepository {
   }
 
   async getUsergByLogin(login: string): Promise<UserEntity | null> {
-    // const user = await this.userModel.findOne({login: login})
-    // const user = await this.dataSource.query(`SELECT * FROM public."Users" 
-    // WHERE login = $1`, [login])
-    // if(!user[0]){
-    //   return null
-    // }
-    // return user[0]
-
     const user = await this.userRepository
       .createQueryBuilder('user')
       .where({ login: login })

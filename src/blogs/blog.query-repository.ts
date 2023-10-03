@@ -23,11 +23,6 @@ export class BlogQueryRepository {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     // const transformedBlogs = blogs.filter(blog => !blog.banInfo.isBanned).map(({ userId, banInfo, ...rest }) => ({ id: rest.id, ...rest }))
 
-    //const count = trans blogs?????????????? blogs.length
-    // const count = await this.dataSource.query(`
-    //   SELECT COUNT(*) FROM public."Blogs" b
-    //   WHERE (COALESCE(b."name" ILIKE $1, true))
-    // `,[query.searchNameTerm ? `%${query.searchNameTerm}%` : null])
     const count = await this.countBlogs(query)
     const result = Paginator.createPaginationResult(count, query, blogs)
     
@@ -36,8 +31,6 @@ export class BlogQueryRepository {
 
   async getBlogsIds(userId: string | null): Promise<string[]> {
     const blogs = await this.blogModel.find({userId: userId, 'banInfo.isBanned': false})
-    
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const blogIdArray = blogs.map((blog) => (blog._id.toString()))
     
     return blogIdArray
@@ -49,41 +42,24 @@ export class BlogQueryRepository {
     const count = await this.countBlogs(query)
     // const transformedBlogs = blogs.map(({ userId, ...rest }) => ({ id: rest.id, ...rest, blogOwnerInfo: {userId: userId, userLogin: null}, 
     // banInfo: {isBanned: rest.banInfo.isBanned, banDate: rest.banInfo.banDate} }))
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const transformedBlogs = blogs.map(({ userId, ...rest }) => ({ id: rest.id, ...rest}))
+    const transformedBlogs = blogs.map(({ ...rest }) => ({ id: rest.id, ...rest, userId: undefined}))
     const result = Paginator.createPaginationResult(count, query, transformedBlogs)
     return result
   }
 
   async getBlogById(blogId: string): Promise<BlogViewModel> {
-    // const blog = await this.blogModel.findById(blogId, { __v: false, userId: false })
-    // const blog: SQLBlog = await this.dataSource.query(`
-    // SELECT * FROM public."Blogs"
-    // WHERE id = $1
-    // `, [blogId])
-
     const blog = await this.blogRepository.findOneBy({id: blogId})
 
     if (!blog /*|| blog[0].banInfo.isBanned*/){
       throw new NotFoundException()
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { userId, banInfo, ...rest } = blog
-    const id = rest.id
-    return { id, ...rest }
+    
+    const result = {...blog, userId: undefined, banInfo: undefined}
+    const id = result.id
+    return { id, ...result }
   }
 
   async getBlogByIdNoView(blogId: string): Promise<Blog | null> {
-    // to json?
-    // const blog = await this.blogModel.findById(blogId, { __v: false })
-    // if (!blog){
-    //   return null
-    // }
-    // return blog
-    // const blog: SQLBlog = await this.dataSource.query(`
-    // SELECT * FROM public."Blogs"
-    // WHERE id = $1
-    // `, [blogId])
     const blog = await this.blogRepository.findOneBy({id: blogId})
     
     if(!blog){
@@ -175,14 +151,6 @@ export class BlogQueryRepository {
   // add filter to params
   private async getBlogsWithFilter(query: QueryParamsModel, userId: string | null): Promise<BlogEntity[]>{
     const skip = (query.pageNumber - 1) * query.pageSize
-    // const filter: any = userId === null ? `WHERE (COALESCE(b."name" ILIKE $1, true))` : `WHERE (COALESCE(b."name" ILIKE $1, true)) AND "userId" = ${userId}`
-    // const blogs: SQLBlog[] = await this.dataSource.query(`
-    // SELECT id, name, description, "websiteUrl", "createdAt", "isMembership" FROM public."Blogs" b   
-    // ${filter}
-    // ORDER BY b."${query.sortBy}" COLLATE "C" ${query.sortDirection}
-    // OFFSET $2
-    // LIMIT $3
-    // `, [query.searchNameTerm ? `%${query.searchNameTerm}%` : null, skip, query.pageSize])
 
     const blogs = await this.blogRepository
     .createQueryBuilder('blog')
