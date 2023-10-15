@@ -8,7 +8,7 @@ export const getTestConfiguration = () => ({
         port: 5432,
         username: 'admin',
         password: 'admin',
-        database: 'incubatorTypeorm',
+        database: 'incubatorTypeormAuto',
       },
     },
     jwt_secret_key: process.env.JWT_SECRET_KEY ?? 'SECRETKEY'

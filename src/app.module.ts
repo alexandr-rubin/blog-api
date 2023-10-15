@@ -72,6 +72,11 @@ import { PostLikesAndDislikesEntity } from './posts/entities/post-likes-and-disl
 import { CommentEntity } from './comments/entities/comment.entity';
 import { CommentLikesAndDislikesEntity } from './comments/entities/comment-likes-and-dislikes';
 import { DeviceEntity } from './models/device.entity';
+import { QuizQuestionsService } from './quiz/quiz-questions.service';
+import { QuizQuestionsController } from './quiz/quiz-questions.controller';
+import { QuizQuestionsRepository } from './quiz/quiz-questions.repository';
+import { QuizQuestionEntity } from './quiz/quiz-questions/entities/quiz-question.entity';
+import { QuizQuestionsQueryRepository } from './quiz/quiz-questions.query-repository';
 
 @Module({
   imports: [
@@ -129,7 +134,7 @@ import { DeviceEntity } from './models/device.entity';
         password: configService.get<string>('db.postgres.password'),
         database: configService.get<string>('db.postgres.database'),
         autoLoadEntities: true,
-        synchronize: true,
+        synchronize: false,
       }),
       inject: [ConfigService],
     }),
@@ -153,7 +158,9 @@ import { DeviceEntity } from './models/device.entity';
       PostEntity, 
       PostLikesAndDislikesEntity, 
       CommentEntity,
-      CommentLikesAndDislikesEntity]),
+      CommentLikesAndDislikesEntity,
+      QuizQuestionEntity
+    ]),
 
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -173,7 +180,7 @@ import { DeviceEntity } from './models/device.entity';
     ]),
   ],
   controllers: [AppController, TestingController, BlogsController, PostsController, UsersController, CommentController, AuthorizationController, SecurityController,
-    PublicBlogsController, SuperAdminBlogsController, BloggerBlogsUsersController],
+    PublicBlogsController, SuperAdminBlogsController, BloggerBlogsUsersController, QuizQuestionsController],
   providers: [AppService, IsBlogIdValidConstraint, JwtStrategy, JwtAuthGuard,
     JwtAuthService, RolesGuard,
     BlogService, BlogQueryRepository, BlogRepository, BlogExistValidator,
@@ -182,7 +189,8 @@ import { DeviceEntity } from './models/device.entity';
     UserService, UserQueryRepository, UserRepository, UserExistValidator,
     EmailAdapter, EmailService, EmailConfirmationCodeValidator,
     AuthorizationService, AuthorizationRepository,
-    LoginValidation, SecurityService, SecurityRepository, SecurityQueryRepository],
+    LoginValidation, SecurityService, SecurityRepository, SecurityQueryRepository,
+    QuizQuestionsService, QuizQuestionsRepository, QuizQuestionsQueryRepository],
 })
 
 export class AppModule {}

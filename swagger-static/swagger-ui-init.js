@@ -1067,6 +1067,36 @@ window.onload = function() {
             }
           }
         }
+      },
+      "/sa/quiz/questions": {
+        "post": {
+          "operationId": "QuizQuestionsController_createQuestion",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuizQuestionInputModel"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": ""
+            }
+          }
+        },
+        "get": {
+          "operationId": "QuizQuestionsController_getQuestions",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          }
+        }
       }
     },
     "info": {
@@ -1125,6 +1155,10 @@ window.onload = function() {
           "properties": {}
         },
         "BanUserForBlogInputModel": {
+          "type": "object",
+          "properties": {}
+        },
+        "QuizQuestionInputModel": {
           "type": "object",
           "properties": {}
         }

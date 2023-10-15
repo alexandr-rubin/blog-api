@@ -8,10 +8,12 @@ import mongoose from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import { getTestConfiguration } from './config/test.config';
 import { removeAllData } from './testHelpers/remove-all-data.helper';
+import { DataSource } from 'typeorm';
 
 describe('Blogs (e2e)', () => {
   let app: INestApplication;
   let httpServer
+  let dataSource: DataSource
   // let mongoServer: MongoMemoryServer
 
   beforeEach(async () => {
@@ -42,6 +44,8 @@ describe('Blogs (e2e)', () => {
     })
     .compile();
 
+    dataSource = moduleFixture.get<DataSource>(DataSource)
+
     app = moduleFixture.createNestApplication();
 
     appSettings(app)
@@ -52,8 +56,9 @@ describe('Blogs (e2e)', () => {
   });
 
   afterAll(async() => {
-    await app.close()
+    await dataSource.destroy()
     await mongoose.disconnect()
+    await app.close()
     // await mongoServer.stop()
     // how to close sql connection
     
@@ -65,27 +70,11 @@ describe('Blogs (e2e)', () => {
       "password": "zxc228",
       "email": "zxc@mail.com"
     }
+
   describe('DELETE -> "/testing/all-data": should remove all data; status 204; used additional methods: GET => /sa/users, GET => /blogs, GET => /posts', () => {
     it('Delete all data', async function() {
       await removeAllData(httpServer)
     })
-    // it('Delete all', async function() {
-    //   await request(httpServer).delete('/testing/all-data').expect(HttpStatusCode.NO_CONTENT_204)
-    // })
-    // // Add security and comments check
-    // it('sould return no users', async function() {
-    //   //await request(httpServer).post('/sa/users').set('Authorization', 'Basic YWRtaW46cXdlcnR5').send(user).expect(HttpStatusCode.CREATED_201)
-    //   const usersRes = await request(httpServer).get('/sa/users').set('Authorization', 'Basic YWRtaW46cXdlcnR5').expect(HttpStatusCode.OK_200)
-    //   expect(usersRes.body.items.length).toBe(0)
-    // })
-    // it('sould return no blogs', async function() {
-    //   const blogsRes = await request(httpServer).get('/blogs').expect(HttpStatusCode.OK_200)
-    //   expect(blogsRes.body.items.length).toBe(0)
-    // })
-    // it('sould return no posts', async function() {
-    //   const postsRes = await request(httpServer).get('/posts').expect(HttpStatusCode.OK_200)
-    //   expect(postsRes.body.items.length).toBe(0)
-    // })
   })
 
   describe('POST -> "/sa/users": should create new user; status 201; content: created user; used additional methods: GET => /sa/users;', () => {

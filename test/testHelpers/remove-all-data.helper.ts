@@ -7,6 +7,7 @@ export async function removeAllData(httpServer) {
   await checkNoUsers(httpServer)
   await checkNoBlogs(httpServer)
   await checkNoPosts(httpServer)
+  await checkNoQuestions(httpServer)
 }
 
 async function checkNoUsers(httpServer) {
@@ -26,4 +27,12 @@ async function checkNoBlogs(httpServer) {
 async function checkNoPosts(httpServer) {
   const postsRes = await request(httpServer).get('/posts').expect(HttpStatusCode.OK_200);
   expect(postsRes.body.items.length).toBe(0)
+}
+
+async function checkNoQuestions(httpServer) {
+  const questionsRes = await request(httpServer)
+  .get('/sa/quiz/questions')
+  .set('Authorization', 'Basic YWRtaW46cXdlcnR5').expect(HttpStatusCode.OK_200);
+
+  expect(questionsRes.body.items.length).toBe(0)
 }

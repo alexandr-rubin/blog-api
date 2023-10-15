@@ -10,6 +10,8 @@ export const createPaginationQuery = (query: QueryParamsModel): QueryParamsModel
             searchEmailTerm: typeof query.searchEmailTerm === 'string' && query.searchEmailTerm !== undefined ? query.searchEmailTerm : null,
             searchLoginTerm: typeof query.searchLoginTerm === 'string' && query.searchLoginTerm !== undefined ? query.searchLoginTerm : null,
             banStatus: typeof query.banStatus === 'string' && query.banStatus !== undefined ? query.banStatus : null,
+            bodySearchTerm: typeof query.bodySearchTerm === 'string' ? query.bodySearchTerm : null,
+            publishedStatus: typeof query.publishedStatus === 'string' ? (query.publishedStatus === 'all' ? 'all' : query.publishedStatus === 'published' ? 'published' : 'notPublished') : 'all',
         }
         return resultQuery
 }
