@@ -12,6 +12,6 @@ export class QuizQuestionEntity {
   published: boolean
   @Column()
   createdAt: string
-  @Column()
+  @Column({nullable: true})
   updatedAt: string
 }
