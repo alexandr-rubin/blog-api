@@ -1116,6 +1116,64 @@ window.onload = function() {
               "description": ""
             }
           }
+        },
+        "put": {
+          "operationId": "QuizQuestionsController_updateQuestionById",
+          "parameters": [
+            {
+              "name": "questionId",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuizQuestionInputModel"
+                }
+              }
+            }
+          },
+          "responses": {
+            "204": {
+              "description": ""
+            }
+          }
+        }
+      },
+      "/sa/quiz/questions/{questionId}/publish": {
+        "put": {
+          "operationId": "QuizQuestionsController_publishUnpublishQuestionById",
+          "parameters": [
+            {
+              "name": "questionId",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishUnpublishQuestionInputModel"
+                }
+              }
+            }
+          },
+          "responses": {
+            "204": {
+              "description": ""
+            }
+          }
         }
       }
     },
@@ -1179,6 +1237,10 @@ window.onload = function() {
           "properties": {}
         },
         "QuizQuestionInputModel": {
+          "type": "object",
+          "properties": {}
+        },
+        "PublishUnpublishQuestionInputModel": {
           "type": "object",
           "properties": {}
         }

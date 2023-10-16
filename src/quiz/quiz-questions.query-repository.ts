@@ -6,7 +6,7 @@ import { Paginator } from "../models/Paginator";
 import { QuizQuestionViewModel } from "./quiz-questions/models/view/quiz-question";
 import { createPaginationQuery } from "../helpers/pagination";
 import { QueryParamsModel } from "../models/PaginationQuery";
-import { PublishStatuses } from "../helpers/publishedStatuses";
+import { PaginationPublishStatuses } from "../helpers/paginationPublishedStatuses";
 
 @Injectable()
 export class QuizQuestionsQueryRepository {
@@ -48,9 +48,9 @@ export class QuizQuestionsQueryRepository {
     const qb = this.quizQuestionsRepository.createQueryBuilder('question')
       .select()
   
-    if (query.publishedStatus !== PublishStatuses.All) {
+    if (query.publishedStatus !== PaginationPublishStatuses.All) {
       qb.andWhere('question.published = :publishedStatus', {
-        publishedStatus: query.publishedStatus === PublishStatuses.Published
+        publishedStatus: query.publishedStatus === PaginationPublishStatuses.Published
       })
     }
   
