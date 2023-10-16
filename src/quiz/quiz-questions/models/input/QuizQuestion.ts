@@ -1,4 +1,4 @@
-import { IsString, MaxLength, Matches, MinLength, IsArray } from "class-validator"
+import { IsString, MaxLength, Matches, MinLength, IsArray, ArrayMinSize } from "class-validator"
 
 export class QuizQuestionInputModel {
     @IsString()
@@ -7,5 +7,6 @@ export class QuizQuestionInputModel {
     @Matches(/[^ ]+/, { message: 'Name field should not contain only whitespaces' })
     body: string
     @IsArray()
+    @ArrayMinSize(1)
     correctAnswers!: string[]
 }

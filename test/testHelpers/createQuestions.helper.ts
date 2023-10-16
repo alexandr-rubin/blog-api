@@ -1,10 +1,19 @@
+import { getTestConfiguration } from "../../test/config/test.config";
 import { HttpStatusCode } from "../../src/helpers/httpStatusCode";
 import request from 'supertest';
+import { QuizQuestionInputModel } from "../../src/quiz/quiz-questions/models/input/QuizQuestion";
 
 export async function createTenQuestions(httpServer) {
+  const basicAuthCredentials = 'Basic ' + btoa(getTestConfiguration().basic_auth_credentials)
   for(let i = 0; i < questions.length; i++) {
-    await request(httpServer).post('/sa/quiz/questions').set('Authorization', 'Basic YWRtaW46cXdlcnR5').send(questions[i]).expect(HttpStatusCode.CREATED_201)
+    await request(httpServer).post('/sa/quiz/questions').set('Authorization', basicAuthCredentials).send(questions[i]).expect(HttpStatusCode.CREATED_201)
   }
+}
+
+export async function createOneQuestion(httpServer, question: QuizQuestionInputModel) {
+  const basicAuthCredentials = 'Basic ' + btoa(getTestConfiguration().basic_auth_credentials)
+  const questionRes = await request(httpServer).post('/sa/quiz/questions').set('Authorization', basicAuthCredentials).send(question).expect(HttpStatusCode.CREATED_201)
+  return questionRes.body
 }
 
 export const questions = [

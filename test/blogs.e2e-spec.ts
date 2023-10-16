@@ -14,6 +14,7 @@ describe('Blogs (e2e)', () => {
   let app: INestApplication;
   let httpServer
   let dataSource: DataSource
+  let basicAuthCredentials
   // let mongoServer: MongoMemoryServer
 
   beforeEach(async () => {
@@ -40,9 +41,13 @@ describe('Blogs (e2e)', () => {
           return getTestConfiguration().db.postgres.database
         if(key === 'JWT_SECRET_KEY')
           return getTestConfiguration().jwt_secret_key
+        if(key === 'BASIC_AUTH_CREDENTIALS')
+          return getTestConfiguration().basic_auth_credentials
       },
     })
     .compile();
+
+    basicAuthCredentials = 'Basic ' + btoa(getTestConfiguration().basic_auth_credentials)
 
     dataSource = moduleFixture.get<DataSource>(DataSource)
 
@@ -73,33 +78,33 @@ describe('Blogs (e2e)', () => {
 
   describe('DELETE -> "/testing/all-data": should remove all data; status 204; used additional methods: GET => /sa/users, GET => /blogs, GET => /posts', () => {
     it('Delete all data', async function() {
-      await removeAllData(httpServer)
+      await removeAllData(httpServer, basicAuthCredentials)
     })
   })
 
   describe('POST -> "/sa/users": should create new user; status 201; content: created user; used additional methods: GET => /sa/users;', () => {
     // Add security and comments check
     it('sould create new user', async function() {
-      await request(httpServer).post('/sa/users').set('Authorization', 'Basic YWRtaW46cXdlcnR5').send(user).expect(HttpStatusCode.CREATED_201)
+      await request(httpServer).post('/sa/users').set('Authorization', basicAuthCredentials).send(user).expect(HttpStatusCode.CREATED_201)
     })
     it('sould return user', async function() {
-      const usersRes = await request(httpServer).get('/sa/users').set('Authorization', 'Basic YWRtaW46cXdlcnR5').expect(HttpStatusCode.OK_200)
+      const usersRes = await request(httpServer).get('/sa/users').set('Authorization', basicAuthCredentials).expect(HttpStatusCode.OK_200)
       expect(usersRes.body.items.length).toBe(1)
     })
   })
 
   describe('DELETE -> "/testing/all-data": should remove all data; status 204; used additional methods: GET => /sa/users, GET => /blogs, GET => /posts', () => {
     it('Delete all data', async function() {
-      await removeAllData(httpServer)
+      await removeAllData(httpServer, basicAuthCredentials)
     })
   })
 
   describe('GET -> "/sa/users": should return status 200; content: users array with pagination; used additional methods: POST -> /sa/users;', () => {
     it('sould create new user', async function() {
-      await request(httpServer).post('/sa/users').set('Authorization', 'Basic YWRtaW46cXdlcnR5').send(user).expect(HttpStatusCode.CREATED_201)
+      await request(httpServer).post('/sa/users').set('Authorization', basicAuthCredentials).send(user).expect(HttpStatusCode.CREATED_201)
     })
     it('sould return user', async function() {
-      const usersRes = await request(httpServer).get('/sa/users').set('Authorization', 'Basic YWRtaW46cXdlcnR5').expect(HttpStatusCode.OK_200)
+      const usersRes = await request(httpServer).get('/sa/users').set('Authorization', basicAuthCredentials).expect(HttpStatusCode.OK_200)
       expect(usersRes.body.items.length).toBe(1)
     })
   })

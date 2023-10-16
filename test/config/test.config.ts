@@ -11,7 +11,8 @@ export const getTestConfiguration = () => ({
         database: 'incubatorTypeormAuto',
       },
     },
-    jwt_secret_key: process.env.JWT_SECRET_KEY ?? 'SECRETKEY'
+    jwt_secret_key: process.env.JWT_SECRET_KEY ?? 'SECRETKEY',
+    basic_auth_credentials: process.env.BASIC_AUTH_CREDENTIALS ?? 'BASIC_AUTH_CREDENTIALS'
   });
   
   type TestConfigurationType = ReturnType<typeof getTestConfiguration>;
@@ -25,4 +26,5 @@ export const getTestConfiguration = () => ({
     DB_USERNAME: string
     DB_PASSWORD: string
     DB_NAME: string
+    BASIC_AUTH_CREDENTIALS: string
   };
