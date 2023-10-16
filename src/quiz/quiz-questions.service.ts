@@ -38,7 +38,8 @@ export class QuizQuestionsService {
   }
 
   async publishUnpublishQuestionById(id: string, publishStatus: boolean): Promise<UpdateResult> {
-    const isUpdated = await this.quizQuestionsRepository.publishUnpublishQuestionById(id, publishStatus)
+    const updatedAt = new Date().toISOString()
+    const isUpdated = await this.quizQuestionsRepository.publishUnpublishQuestionById(id, publishStatus, updatedAt)
     if(!isUpdated){
       throw new NotFoundException()
     }

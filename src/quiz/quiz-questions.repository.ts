@@ -25,7 +25,7 @@ export class QuizQuestionsRepository {
     return await this.quizQuestionsRepository.update( { id: id }, question)
   }
 
-  async publishUnpublishQuestionById(id: string, publishStatus: boolean): Promise<UpdateResult> {
-    return await this.quizQuestionsRepository.update( { id: id }, { published: publishStatus })
+  async publishUnpublishQuestionById(id: string, publishStatus: boolean, updatedAt: string): Promise<UpdateResult> {
+    return await this.quizQuestionsRepository.update( { id: id }, { published: publishStatus, updatedAt: updatedAt })
   }
 }
