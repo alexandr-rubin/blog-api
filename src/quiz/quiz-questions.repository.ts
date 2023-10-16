@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { DeleteResult, Repository } from "typeorm";
 import { QuizQuestionEntity } from "./quiz-questions/entities/quiz-question.entity";
 import { CreateQuestionInputModel } from "./quiz-questions/models/input/CreateQuestion";
 
@@ -14,5 +14,9 @@ export class QuizQuestionsRepository {
   async deleteQuestionsTesting(): Promise<boolean> {
     await this.quizQuestionsRepository.clear()
     return true
+  }
+
+  async DeleteQuestionById(id: string): Promise<DeleteResult> {
+    return await this.quizQuestionsRepository.delete(id)
   }
 }

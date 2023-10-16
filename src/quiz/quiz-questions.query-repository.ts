@@ -46,20 +46,29 @@ export class QuizQuestionsQueryRepository {
 
   private async buildQuestionQueryBuilder (query: QueryParamsModel) {
     const qb = this.quizQuestionsRepository.createQueryBuilder('question')
-      .select();
+      .select()
   
     if (query.publishedStatus !== PublishStatuses.All) {
       qb.andWhere('question.published = :publishedStatus', {
         publishedStatus: query.publishedStatus === PublishStatuses.Published
-      });
+      })
     }
   
     if (query.bodySearchTerm) {
       qb.andWhere('question.body ILIKE :bodySearchTerm', {
         bodySearchTerm: `%${query.bodySearchTerm}%`
-      });
+      })
     }
   
-    return qb;
-  };
+    return qb
+  }
+
+  async getQuestionByIdNoView(questionId: string): Promise<QuizQuestionEntity | null> {
+    const question = await this.quizQuestionsRepository.findOneBy({id: questionId})
+    
+    if(!question){
+      return null
+    }
+    return question
+  }
 }

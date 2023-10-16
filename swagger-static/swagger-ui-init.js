@@ -1097,6 +1097,26 @@ window.onload = function() {
             }
           }
         }
+      },
+      "/sa/quiz/questions/{questionId}": {
+        "delete": {
+          "operationId": "QuizQuestionsController_deleteQuestionById",
+          "parameters": [
+            {
+              "name": "questionId",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "204": {
+              "description": ""
+            }
+          }
+        }
       }
     },
     "info": {

@@ -1,8 +1,9 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { QuizQuestionViewModel } from "./quiz-questions/models/view/quiz-question";
 import { QuizQuestionInputModel } from "./quiz-questions/models/input/QuizQuestion";
 import { QuizQuestionsRepository } from "./quiz-questions.repository";
 import { CreateQuestionInputModel } from "./quiz-questions/models/input/CreateQuestion";
+import { DeleteResult } from "typeorm";
 
 @Injectable()
 export class QuizQuestionsService {
@@ -16,5 +17,13 @@ export class QuizQuestionsService {
 
   async deleteQuestionsTesting(): Promise<boolean> {
     return await this.quizQuestionsRepository.deleteQuestionsTesting()
+  }
+
+  async deleteQuestionById(questionId: string): Promise<DeleteResult> {
+    const isDeleted = await this.quizQuestionsRepository.DeleteQuestionById(questionId)
+    if(isDeleted.affected === 0){
+      throw new NotFoundException()
+    }
+    return isDeleted
   }
 }

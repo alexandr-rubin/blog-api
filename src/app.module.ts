@@ -77,6 +77,7 @@ import { QuizQuestionsController } from './quiz/quiz-questions.controller';
 import { QuizQuestionsRepository } from './quiz/quiz-questions.repository';
 import { QuizQuestionEntity } from './quiz/quiz-questions/entities/quiz-question.entity';
 import { QuizQuestionsQueryRepository } from './quiz/quiz-questions.query-repository';
+import { QuestionExistValidator } from './validation/QuestionExistValidator';
 
 @Module({
   imports: [
@@ -190,7 +191,7 @@ import { QuizQuestionsQueryRepository } from './quiz/quiz-questions.query-reposi
     EmailAdapter, EmailService, EmailConfirmationCodeValidator,
     AuthorizationService, AuthorizationRepository,
     LoginValidation, SecurityService, SecurityRepository, SecurityQueryRepository,
-    QuizQuestionsService, QuizQuestionsRepository, QuizQuestionsQueryRepository],
+    QuizQuestionsService, QuizQuestionsRepository, QuizQuestionsQueryRepository, QuestionExistValidator],
 })
 
 export class AppModule {}

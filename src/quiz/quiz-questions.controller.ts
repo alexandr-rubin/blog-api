@@ -1,10 +1,11 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Put, Query, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, Req, UseGuards } from "@nestjs/common";
 import { BasicAuthGuard } from "../guards/basic-auth.guard";
 import { HttpStatusCode } from "../helpers/httpStatusCode";
 import { QuizQuestionInputModel } from "./quiz-questions/models/input/QuizQuestion";
 import { QuizQuestionsService } from "./quiz-questions.service";
 import { QuizQuestionsQueryRepository } from "./quiz-questions.query-repository";
 import { QueryParamsModel } from "../models/PaginationQuery";
+import { QuestionIdValidationPipe } from "../validation/pipes/question-Id-validation.pipe";
 
 @UseGuards(BasicAuthGuard)
 @Controller('sa/quiz/questions')
@@ -21,5 +22,11 @@ export class QuizQuestionsController {
   async getQuestions(@Query() params: QueryParamsModel) {
     const questions = await this.quizQuestionsQueryRepository.getQuestions(params)
     return questions
+  }
+
+  @HttpCode(HttpStatusCode.NO_CONTENT_204)
+  @Delete(':questionId')
+  async deleteQuestionById(@Param('questionId', QuestionIdValidationPipe) id: string) {
+    return await this.quizQuestionsService.deleteQuestionById(id)
   }
 }
