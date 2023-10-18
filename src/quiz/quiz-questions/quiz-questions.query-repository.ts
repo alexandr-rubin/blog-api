@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { QuizQuestionEntity } from "./quiz-questions/entities/quiz-question.entity";
-import { Paginator } from "../models/Paginator";
-import { QuizQuestionViewModel } from "./quiz-questions/models/view/quiz-question";
-import { createPaginationQuery } from "../helpers/pagination";
-import { QueryParamsModel } from "../models/PaginationQuery";
-import { PaginationPublishStatuses } from "../helpers/paginationPublishedStatuses";
+import { QuizQuestionEntity } from "./entities/quiz-question.entity";
+import { Paginator } from "../../models/Paginator";
+import { QuizQuestionViewModel } from "./models/view/quiz-question";
+import { createPaginationQuery } from "../../helpers/pagination";
+import { QueryParamsModel } from "../../models/PaginationQuery";
+import { PaginationPublishStatuses } from "../../helpers/paginationPublishedStatuses";
 
 @Injectable()
 export class QuizQuestionsQueryRepository {

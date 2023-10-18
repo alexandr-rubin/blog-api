@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DeleteResult, Repository, UpdateResult } from "typeorm";
-import { QuizQuestionEntity } from "./quiz-questions/entities/quiz-question.entity";
-import { CreateQuestionInputModel } from "./quiz-questions/models/input/CreateQuestion";
-import { UpdateQuestionInputModel } from "./quiz-questions/models/input/UpdateQuestion";
+import { QuizQuestionEntity } from "./entities/quiz-question.entity";
+import { CreateQuestionInputModel } from "./models/input/CreateQuestion";
+import { UpdateQuestionInputModel } from "./models/input/UpdateQuestion";
 
 @Injectable()
 export class QuizQuestionsRepository {

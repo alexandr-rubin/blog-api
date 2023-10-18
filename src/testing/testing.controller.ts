@@ -6,7 +6,7 @@ import { PostService } from "../posts/post.service";
 import { BlogService } from "../blogs/blog.service";
 import { CommentService } from "../comments/comment.service";
 import { SecurityService } from "../security/security.service";
-import { QuizQuestionsService } from "../quiz/quiz-questions.service";
+import { QuizQuestionsService } from "../quiz/quiz-questions/quiz-questions.service";
 
 @Controller('testing/all-data')
 export class TestingController {

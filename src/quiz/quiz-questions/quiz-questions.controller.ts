@@ -1,12 +1,12 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, UseGuards } from "@nestjs/common";
-import { BasicAuthGuard } from "../guards/basic-auth.guard";
-import { HttpStatusCode } from "../helpers/httpStatusCode";
-import { QuizQuestionInputModel } from "./quiz-questions/models/input/QuizQuestion";
-import { QuizQuestionsService } from "./quiz-questions.service";
+import { BasicAuthGuard } from "../../guards/basic-auth.guard";
+import { HttpStatusCode } from "../../helpers/httpStatusCode";
+import { QuizQuestionInputModel } from "./models/input/QuizQuestion";
 import { QuizQuestionsQueryRepository } from "./quiz-questions.query-repository";
-import { QueryParamsModel } from "../models/PaginationQuery";
-import { QuestionIdValidationPipe } from "../validation/pipes/question-Id-validation.pipe";
-import { PublishUnpublishQuestionInputModel } from "./quiz-questions/models/input/publishUnpublishQuestion";
+import { QueryParamsModel } from "../../models/PaginationQuery";
+import { QuestionIdValidationPipe } from "../../validation/pipes/question-Id-validation.pipe";
+import { PublishUnpublishQuestionInputModel } from "./models/input/publishUnpublishQuestion";
+import { QuizQuestionsService } from "./quiz-questions.service";
 
 @UseGuards(BasicAuthGuard)
 @Controller('sa/quiz/questions')

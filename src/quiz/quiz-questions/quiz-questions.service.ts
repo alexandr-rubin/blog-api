@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { QuizQuestionViewModel } from "./quiz-questions/models/view/quiz-question";
-import { QuizQuestionInputModel } from "./quiz-questions/models/input/QuizQuestion";
-import { QuizQuestionsRepository } from "./quiz-questions.repository";
-import { CreateQuestionInputModel } from "./quiz-questions/models/input/CreateQuestion";
 import { DeleteResult, UpdateResult } from "typeorm";
-import { UpdateQuestionInputModel } from "./quiz-questions/models/input/UpdateQuestion";
+import { QuizQuestionsRepository } from "./quiz-questions.repository";
+import { QuizQuestionInputModel } from "./models/input/QuizQuestion";
+import { QuizQuestionViewModel } from "./models/view/quiz-question";
+import { CreateQuestionInputModel } from "./models/input/CreateQuestion";
+import { UpdateQuestionInputModel } from "./models/input/UpdateQuestion";
 
 @Injectable()
 export class QuizQuestionsService {

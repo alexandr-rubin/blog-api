@@ -72,12 +72,14 @@ import { PostLikesAndDislikesEntity } from './posts/entities/post-likes-and-disl
 import { CommentEntity } from './comments/entities/comment.entity';
 import { CommentLikesAndDislikesEntity } from './comments/entities/comment-likes-and-dislikes';
 import { DeviceEntity } from './models/device.entity';
-import { QuizQuestionsService } from './quiz/quiz-questions.service';
-import { QuizQuestionsController } from './quiz/quiz-questions.controller';
-import { QuizQuestionsRepository } from './quiz/quiz-questions.repository';
+import { QuizQuestionsController } from './quiz/quiz-questions/quiz-questions.controller';
 import { QuizQuestionEntity } from './quiz/quiz-questions/entities/quiz-question.entity';
-import { QuizQuestionsQueryRepository } from './quiz/quiz-questions.query-repository';
+import { QuizQuestionsQueryRepository } from './quiz/quiz-questions/quiz-questions.query-repository';
 import { QuestionExistValidator } from './validation/QuestionExistValidator';
+import { QuizQuestionsRepository } from './quiz/quiz-questions/quiz-questions.repository';
+import { QuizQuestionsService } from './quiz/quiz-questions/quiz-questions.service';
+import { QuizGameEntity } from './quiz/pair-quiz-game/entities/quiz-game.entity';
+import { QuizAnswersEntity } from './quiz/pair-quiz-game/entities/quiz-answers.entity';
 
 @Module({
   imports: [
@@ -160,7 +162,9 @@ import { QuestionExistValidator } from './validation/QuestionExistValidator';
       PostLikesAndDislikesEntity, 
       CommentEntity,
       CommentLikesAndDislikesEntity,
-      QuizQuestionEntity
+      QuizQuestionEntity,
+      QuizGameEntity,
+      QuizAnswersEntity
     ]),
 
     MongooseModule.forRootAsync({

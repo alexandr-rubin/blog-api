@@ -1,6 +1,6 @@
 import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 import { Injectable } from '@nestjs/common';
-import { QuizQuestionsQueryRepository } from '../quiz/quiz-questions.query-repository';
+import { QuizQuestionsQueryRepository } from '../quiz/quiz-questions/quiz-questions.query-repository';
 
 @ValidatorConstraint({ async: true })
 @Injectable()
