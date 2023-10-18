@@ -13,7 +13,7 @@ export class QuizQuestionsRepository {
   }
 
   async deleteQuestionsTesting(): Promise<boolean> {
-    await this.quizQuestionsRepository.clear()
+    await this.quizQuestionsRepository.delete({})
     return true
   }
 

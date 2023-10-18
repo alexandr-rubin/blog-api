@@ -17,11 +17,11 @@ export class TestingController {
     await this.securityService.deleteAllAPILogsTesting()
     await this.securityService.deleteAllDevicesTesting()
     await this.commentService.deleteCommentTesting()
-    await this.quizQuestionsService.deleteQuestionsTesting()
     await this.postService.deletePostsTesting()
     await this.blogService.deleteBlogsTesting()
     await this.userService.deleteUsersTesting()
     await this.blogService.deleteBannedUsersTesting()
+    await this.quizQuestionsService.deleteQuestionsTesting()
 
     return res.sendStatus(HttpStatusCode.NO_CONTENT_204)  
   }
