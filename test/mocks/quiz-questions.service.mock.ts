@@ -10,7 +10,7 @@ export const arr = []
 @Injectable()
 export class QuizQuestionsServiceMock extends QuizQuestionsService {
   async addQuestion(question: QuizQuestionInputModel): Promise<QuizQuestionViewModel>{
-    const newQuestion: CreateQuestionInputModel = {body: question.body, correctAnswers: Object.fromEntries(question.correctAnswers.map(value => [value, value])), published: false, createdAt: new Date().toISOString()}
+    const newQuestion: CreateQuestionInputModel = {body: question.body, correctAnswers: Object.fromEntries(question.correctAnswers.map(value => [value, value])), published: false, createdAt: new Date().toISOString(), updatedAt: null}
     const id = randomUUID()
     const result =  {id: id, ...newQuestion, updatedAt: null, correctAnswers: question.correctAnswers}
     arr.push(result)

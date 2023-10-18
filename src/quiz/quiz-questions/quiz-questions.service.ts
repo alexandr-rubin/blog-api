@@ -11,7 +11,7 @@ export class QuizQuestionsService {
   constructor(private readonly quizQuestionsRepository: QuizQuestionsRepository){}
 
   async addQuestion(question: QuizQuestionInputModel): Promise<QuizQuestionViewModel>{
-    const newQuestion: CreateQuestionInputModel = {body: question.body, correctAnswers: Object.fromEntries(question.correctAnswers.map(value => [value, value])), published: false, createdAt: new Date().toISOString()}
+    const newQuestion: CreateQuestionInputModel = {body: question.body, correctAnswers: Object.fromEntries(question.correctAnswers.map(value => [value, value])), published: false, createdAt: new Date().toISOString(), updatedAt: null}
     const id = await this.quizQuestionsRepository.addQuestion(newQuestion)
     return {id: id, ...newQuestion, updatedAt: null, correctAnswers: question.correctAnswers}
   }

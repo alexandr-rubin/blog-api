@@ -9,7 +9,8 @@ import { UpdateQuestionInputModel } from "./models/input/UpdateQuestion";
 export class QuizQuestionsRepository {
   constructor(@InjectRepository(QuizQuestionEntity) private readonly quizQuestionsRepository: Repository<QuizQuestionEntity>){}
   async addQuestion(quizQuestion: CreateQuestionInputModel): Promise<string> {
-    return (await this.quizQuestionsRepository.save(quizQuestion)).id
+    const newQuestion: QuizQuestionEntity = await this.quizQuestionsRepository.save(quizQuestion)
+    return newQuestion.id
   }
 
   async deleteQuestionsTesting(): Promise<boolean> {

@@ -3,4 +3,5 @@ export class CreateQuestionInputModel {
   correctAnswers: object
   published: boolean
   createdAt: string
+  updatedAt: null
 }
