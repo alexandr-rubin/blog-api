@@ -29,7 +29,7 @@ export class QuizQuestionsService {
   }
 
   async updateQuestionById(id: string, question: QuizQuestionInputModel): Promise<UpdateResult> {
-    const newQuestion: UpdateQuestionInputModel = {body: question.body, correctAnswers: Object.fromEntries(question.correctAnswers.map(value => [value, value])), updatedAt: new Date().toISOString()}
+    const newQuestion: UpdateQuestionInputModel = {body: question.body, correctAnswers: Object.fromEntries(question.correctAnswers.map(value => [value, value]))}
     const isUpdated = await this.quizQuestionsRepository.updateQuestionById(id, newQuestion)
     if(!isUpdated){
       throw new NotFoundException()
@@ -38,8 +38,7 @@ export class QuizQuestionsService {
   }
 
   async publishUnpublishQuestionById(id: string, publishStatus: boolean): Promise<UpdateResult> {
-    const updatedAt = new Date().toISOString()
-    const isUpdated = await this.quizQuestionsRepository.publishUnpublishQuestionById(id, publishStatus, updatedAt)
+    const isUpdated = await this.quizQuestionsRepository.publishUnpublishQuestionById(id, publishStatus)
     if(!isUpdated){
       throw new NotFoundException()
     }

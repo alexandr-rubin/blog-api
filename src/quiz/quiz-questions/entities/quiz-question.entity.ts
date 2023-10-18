@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm"
+import { Column, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm"
 
 @Entity('QuizQuestions')
 export class QuizQuestionEntity {
@@ -12,6 +12,6 @@ export class QuizQuestionEntity {
   published: boolean
   @Column()
   createdAt: string
-  @Column({nullable: true})
+  @UpdateDateColumn({default: new Date(), nullable: true})
   updatedAt: string
 }
