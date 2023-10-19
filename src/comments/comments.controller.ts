@@ -4,7 +4,7 @@ import { CommentQueryRepository } from "./comment.query-repository";
 import { CommentService } from "./comment.service";
 import { CommentIdValidationPipe } from "../validation/pipes/comment-Id-validation.pipe";
 import { Request } from 'express'
-import { AccessTokenVrifyModel } from "../authorization/models/input/Auth";
+import { AccessTokenVrifyModel } from "../models/Auth";
 import { JwtAuthService } from "../domain/JWT.service";
 import { likeStatusValidation } from "../validation/likeStatus";
 import { JwtAuthGuard } from "../guards/jwt-auth.guard";

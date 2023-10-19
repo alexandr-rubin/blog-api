@@ -73,6 +73,7 @@ export class UserQueryRepository {
 
   async getUsergByIdNoView(userId: string): Promise<UserEntity | null> {
     const user = await this.userRepository.findOneBy({id: userId})
+    // вроде бы и так вернут null
     if(!user){
       return null
     }

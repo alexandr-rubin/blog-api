@@ -8,7 +8,7 @@ import { BlogIdValidationPipe } from "../validation/pipes/blog-Id-validation.pip
 import { UserIdValidationPipe } from "../validation/pipes/user-Id-validation.pipe";
 import { HttpStatusCode } from "../helpers/httpStatusCode";
 import { BanBlogInputModel } from "./models/input/BanBlogInputModel";
-import { AccessTokenVrifyModel } from "../authorization/models/input/Auth";
+import { AccessTokenVrifyModel } from "../models/Auth";
 import { PostQueryRepository } from "../posts/post.query-repository";
 import { BlogInputModel } from "./models/input/BlogInputModel";
 import { PostForSpecBlogInputModel } from "../posts/models/input/PostForSpecBlog";

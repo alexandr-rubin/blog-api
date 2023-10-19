@@ -9,7 +9,7 @@ import { PasswordRecoveryCodeValidPipe } from "../validation/pipes/password-reco
 import { EmailOrLoginExistsPipe } from "../validation/pipes/email-login-exist.pipe";
 import { LoginValidation } from "../validation/login";
 import { LoginValidationPipe } from "../validation/pipes/login-validation.pipe";
-import { AccessTokenVrifyModel } from "./models/input/Auth";
+import { AccessTokenVrifyModel } from "../models/Auth";
 import { RefreshTokenGuard } from "../guards/refreshToken.guard";
 import { JwtAuthGuard } from "../guards/jwt-auth.guard";
 import { UserInputModel } from "../users/models/input/UserInput";

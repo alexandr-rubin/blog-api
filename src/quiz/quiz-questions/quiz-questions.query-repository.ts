@@ -71,4 +71,14 @@ export class QuizQuestionsQueryRepository {
     }
     return question
   }
+
+  async getQuestionsForGame(): Promise<QuizQuestionEntity[]> {
+    const randomQuestions = await this.quizQuestionsRepository
+      .createQueryBuilder('question')
+      .orderBy('RANDOM()')
+      .take(10)
+      .getMany();
+
+    return randomQuestions
+    }
 }

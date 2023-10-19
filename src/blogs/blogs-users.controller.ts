@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpCode, Param, Put, Query, Req, UseGuards } fr
 import { HttpStatusCode } from "../helpers/httpStatusCode";
 import { BlogService } from "./blog.service";
 import { BlogQueryRepository } from "./blog.query-repository";
-import { AccessTokenVrifyModel } from "../authorization/models/input/Auth";
+import { AccessTokenVrifyModel } from "../models/Auth";
 import { JwtAuthGuard } from "../guards/jwt-auth.guard";
 import { UserQueryRepository } from "../users/user.query-repository";
 import { UserIdValidationPipe } from "../validation/pipes/user-Id-validation.pipe";

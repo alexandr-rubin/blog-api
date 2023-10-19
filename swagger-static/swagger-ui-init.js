@@ -1175,6 +1175,37 @@ window.onload = function() {
             }
           }
         }
+      },
+      "/pair-game-quiz/pairs/connection": {
+        "post": {
+          "operationId": "QuizGamesController_createOrConnectToTheGame",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          }
+        }
+      },
+      "/pair-game-quiz/pairs/{gameId}": {
+        "get": {
+          "operationId": "QuizGamesController_getGameById",
+          "parameters": [
+            {
+              "name": "gameId",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          }
+        }
       }
     },
     "info": {

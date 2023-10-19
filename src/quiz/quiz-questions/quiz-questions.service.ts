@@ -21,7 +21,7 @@ export class QuizQuestionsService {
   }
 
   async deleteQuestionById(questionId: string): Promise<DeleteResult> {
-    const isDeleted = await this.quizQuestionsRepository.DeleteQuestionById(questionId)
+    const isDeleted = await this.quizQuestionsRepository.deleteQuestionById(questionId)
     if(isDeleted.affected === 0){
       throw new NotFoundException()
     }

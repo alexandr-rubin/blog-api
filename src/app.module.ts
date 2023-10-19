@@ -80,6 +80,11 @@ import { QuizQuestionsRepository } from './quiz/quiz-questions/quiz-questions.re
 import { QuizQuestionsService } from './quiz/quiz-questions/quiz-questions.service';
 import { QuizGameEntity } from './quiz/pair-quiz-game/entities/quiz-game.entity';
 import { QuizAnswersEntity } from './quiz/pair-quiz-game/entities/quiz-answers.entity';
+import { QuizGamesRepository } from './quiz/pair-quiz-game/quiz-games.repository';
+import { QuizGamesService } from './quiz/pair-quiz-game/quiz-games.service';
+import { QuizGamesController } from './quiz/pair-quiz-game/quiz-games.controller';
+import { QuizGamesQueryRepository } from './quiz/pair-quiz-game/quiz-games.query-repository';
+import { QuizGameExistValidator } from './validation/GameExistValidator';
 
 @Module({
   imports: [
@@ -185,7 +190,7 @@ import { QuizAnswersEntity } from './quiz/pair-quiz-game/entities/quiz-answers.e
     ]),
   ],
   controllers: [AppController, TestingController, BlogsController, PostsController, UsersController, CommentController, AuthorizationController, SecurityController,
-    PublicBlogsController, SuperAdminBlogsController, BloggerBlogsUsersController, QuizQuestionsController],
+    PublicBlogsController, SuperAdminBlogsController, BloggerBlogsUsersController, QuizQuestionsController, QuizGamesController],
   providers: [AppService, IsBlogIdValidConstraint, JwtStrategy, JwtAuthGuard,
     JwtAuthService, RolesGuard,
     BlogService, BlogQueryRepository, BlogRepository, BlogExistValidator,
@@ -195,7 +200,8 @@ import { QuizAnswersEntity } from './quiz/pair-quiz-game/entities/quiz-answers.e
     EmailAdapter, EmailService, EmailConfirmationCodeValidator,
     AuthorizationService, AuthorizationRepository,
     LoginValidation, SecurityService, SecurityRepository, SecurityQueryRepository,
-    QuizQuestionsService, QuizQuestionsRepository, QuizQuestionsQueryRepository, QuestionExistValidator],
+    QuizQuestionsService, QuizQuestionsRepository, QuizQuestionsQueryRepository, QuestionExistValidator,
+    QuizGamesService, QuizGamesRepository, QuizGamesQueryRepository, QuizGameExistValidator],
 })
 
 export class AppModule {}

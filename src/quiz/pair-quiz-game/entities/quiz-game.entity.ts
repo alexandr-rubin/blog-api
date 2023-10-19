@@ -1,6 +1,7 @@
 import { GameStatuses } from "../../../helpers/gameStatuses"
 import { UserEntity } from "../../../users/user.entity"
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
+import { QuestionViewModel } from "../models/view/Questions"
 
 @Entity('QuizGames')
 export class QuizGameEntity {
@@ -22,11 +23,6 @@ export class QuizGameEntity {
   startGameDate: string
   @Column({nullable: true})
   finishGameDate: string
-  @Column({type: 'jsonb', array: true})
-  questions: questionInEntity[]
-}
-
-type questionInEntity = {
-  id: string
-  body: string
+  @Column({type: 'jsonb'})
+  questions: QuestionViewModel[]
 }

@@ -5,7 +5,7 @@ import { PostQueryRepository } from "./post.query-repository";
 import { QueryParamsModel } from "../models/PaginationQuery";
 //import { BlogIdForPostValidationPipe } from "../validation/pipes/body-blog-id-validation.pipe";
 import { PostIdValidationPipe } from "../validation/pipes/post-Id-validation.pipe";
-import { AccessTokenVrifyModel } from "../authorization/models/input/Auth";
+import { AccessTokenVrifyModel } from "../models/Auth";
 import { Request } from 'express'
 import { JwtAuthService } from "../domain/JWT.service";
 import { likeStatusValidation } from "../validation/likeStatus";

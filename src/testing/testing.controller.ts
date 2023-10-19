@@ -7,11 +7,12 @@ import { BlogService } from "../blogs/blog.service";
 import { CommentService } from "../comments/comment.service";
 import { SecurityService } from "../security/security.service";
 import { QuizQuestionsService } from "../quiz/quiz-questions/quiz-questions.service";
+import { QuizGamesService } from "src/quiz/pair-quiz-game/quiz-games.service";
 
 @Controller('testing/all-data')
 export class TestingController {
   constructor(private userService: UserService, private postService: PostService, private blogService: BlogService, private commentService: CommentService, 
-    private securityService: SecurityService, private quizQuestionsService: QuizQuestionsService){}
+    private securityService: SecurityService, private quizQuestionsService: QuizQuestionsService, private quizGamesService: QuizGamesService){}
   @Delete()
   async deleteAllDataTesting(@Res() res: Response) {
     await this.securityService.deleteAllAPILogsTesting()
@@ -19,9 +20,10 @@ export class TestingController {
     await this.commentService.deleteCommentTesting()
     await this.postService.deletePostsTesting()
     await this.blogService.deleteBlogsTesting()
+    await this.quizQuestionsService.deleteQuestionsTesting()
+    await this.quizGamesService.deleteGamesTesting()
     await this.userService.deleteUsersTesting()
     await this.blogService.deleteBannedUsersTesting()
-    await this.quizQuestionsService.deleteQuestionsTesting()
 
     return res.sendStatus(HttpStatusCode.NO_CONTENT_204)  
   }

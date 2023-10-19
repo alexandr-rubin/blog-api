@@ -7,7 +7,7 @@ import { BlogIdValidationPipe } from "../validation/pipes/blog-Id-validation.pip
 import { PostQueryRepository } from "../posts/post.query-repository";
 import { BlogInputModel } from "./models/input/BlogInputModel";
 import { PostForSpecBlogInputModel } from "../posts/models/input/PostForSpecBlog";
-import { AccessTokenVrifyModel } from "../authorization/models/input/Auth";
+import { AccessTokenVrifyModel } from "../models/Auth";
 import { PostIdValidationPipe } from "../validation/pipes/post-Id-validation.pipe";
 import { PostService } from "../posts/post.service";
 import { JwtAuthGuard } from "../guards/jwt-auth.guard";

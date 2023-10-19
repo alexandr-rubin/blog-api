@@ -18,7 +18,7 @@ export class QuizQuestionsRepository {
     return true
   }
 
-  async DeleteQuestionById(id: string): Promise<DeleteResult> {
+  async deleteQuestionById(id: string): Promise<DeleteResult> {
     return await this.quizQuestionsRepository.delete(id)
   }
 
