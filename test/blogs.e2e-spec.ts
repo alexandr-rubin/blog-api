@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { getTestConfiguration } from './config/test.config';
 import { removeAllData } from './testHelpers/remove-all-data.helper';
 import { DataSource } from 'typeorm';
+import { incorrectBasicAuthCredentials } from './testHelpers/incorrectCredential';
 
 describe('Blogs (e2e)', () => {
   let app: INestApplication;
@@ -111,10 +112,10 @@ describe('Blogs (e2e)', () => {
 
   describe('POST, DELETE -> "/sa/users": should return error if auth credentials is incorrect; status 401;', () => {
     it('Post -> should return error if auth credentials is incorrect', async function() {
-      await request(httpServer).post('/sa/users').set('Authorization', 'incorrect credentials').send(user).expect(HttpStatusCode.UNAUTHORIZED_401)
+      await request(httpServer).post('/sa/users').set('Authorization', incorrectBasicAuthCredentials).send(user).expect(HttpStatusCode.UNAUTHORIZED_401)
     })
     it('Delete -> should return error if auth credentials is incorrect', async function() {
-      await request(httpServer).delete('/sa/users/id').set('Authorization', 'incorrect credentials').expect(HttpStatusCode.UNAUTHORIZED_401)
+      await request(httpServer).delete('/sa/users/id').set('Authorization', incorrectBasicAuthCredentials).expect(HttpStatusCode.UNAUTHORIZED_401)
     })
   })
 });

@@ -75,8 +75,9 @@ export class QuizQuestionsQueryRepository {
   async getQuestionsForGame(): Promise<QuizQuestionEntity[]> {
     const randomQuestions = await this.quizQuestionsRepository
       .createQueryBuilder('question')
+      .where('question.published = true')
       .orderBy('RANDOM()')
-      .take(10)
+      .take(5)
       .getMany();
 
     return randomQuestions

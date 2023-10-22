@@ -79,12 +79,12 @@ import { QuestionExistValidator } from './validation/QuestionExistValidator';
 import { QuizQuestionsRepository } from './quiz/quiz-questions/quiz-questions.repository';
 import { QuizQuestionsService } from './quiz/quiz-questions/quiz-questions.service';
 import { QuizGameEntity } from './quiz/pair-quiz-game/entities/quiz-game.entity';
-import { QuizAnswersEntity } from './quiz/pair-quiz-game/entities/quiz-answers.entity';
 import { QuizGamesRepository } from './quiz/pair-quiz-game/quiz-games.repository';
 import { QuizGamesService } from './quiz/pair-quiz-game/quiz-games.service';
 import { QuizGamesController } from './quiz/pair-quiz-game/quiz-games.controller';
 import { QuizGamesQueryRepository } from './quiz/pair-quiz-game/quiz-games.query-repository';
 import { QuizGameExistValidator } from './validation/GameExistValidator';
+import { QuizAnswersEntity } from './quiz/pair-quiz-game/entities/quiz-answers.entity';
 
 @Module({
   imports: [
@@ -132,31 +132,31 @@ import { QuizGameExistValidator } from './validation/GameExistValidator';
       signOptions: { expiresIn: '10m' },
     }),
 
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('db.postgres.host'),
-        port: configService.get<number>('db.postgres.port'),
-        username: configService.get<string>('db.postgres.username'),
-        password: configService.get<string>('db.postgres.password'),
-        database: configService.get<string>('db.postgres.database'),
-        autoLoadEntities: true,
-        synchronize: false,
-      }),
-      inject: [ConfigService],
-    }),
-
-    // TypeOrmModule.forRoot({
-    //   type: 'postgres',
-    //   host: 'localhost',
-    //   port: 5432,
-    //   username: 'admin',
-    //   password: 'admin',
-    //   database: 'incubatorTypeormAuto',
-    //   autoLoadEntities: true,
-    //   synchronize: true,
+    // TypeOrmModule.forRootAsync({
+    //   imports: [ConfigModule],
+    //   useFactory: (configService: ConfigService) => ({
+    //     type: 'postgres',
+    //     host: configService.get<string>('db.postgres.host'),
+    //     port: configService.get<number>('db.postgres.port'),
+    //     username: configService.get<string>('db.postgres.username'),
+    //     password: configService.get<string>('db.postgres.password'),
+    //     database: configService.get<string>('db.postgres.database'),
+    //     autoLoadEntities: true,
+    //     synchronize: false,
+    //   }),
+    //   inject: [ConfigService],
     // }),
+
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      username: 'admin',
+      password: 'admin',
+      database: 'incubatorTypeormAuto',
+      autoLoadEntities: true,
+      synchronize: true,
+    }),
 
     TypeOrmModule.forFeature([UserEntity, 
       APILogEntity, 

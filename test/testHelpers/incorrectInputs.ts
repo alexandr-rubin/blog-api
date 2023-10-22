@@ -37,3 +37,7 @@ export const incorrectInputsForPublish = {
     published: 'true'
   }
 }
+
+export const incorrectAnswer = {
+  answer: 'icorrectAnswer'
+}

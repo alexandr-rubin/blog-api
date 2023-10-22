@@ -1187,6 +1187,38 @@ window.onload = function() {
           }
         }
       },
+      "/pair-game-quiz/pairs/my-current/answers": {
+        "post": {
+          "operationId": "QuizGamesController_answerCurrentGameQuestion",
+          "parameters": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerInputModel"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          }
+        }
+      },
+      "/pair-game-quiz/pairs/my-current": {
+        "get": {
+          "operationId": "QuizGamesController_getMyCurrentGame",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          }
+        }
+      },
       "/pair-game-quiz/pairs/{gameId}": {
         "get": {
           "operationId": "QuizGamesController_getGameById",
@@ -1272,6 +1304,10 @@ window.onload = function() {
           "properties": {}
         },
         "PublishUnpublishQuestionInputModel": {
+          "type": "object",
+          "properties": {}
+        },
+        "AnswerInputModel": {
           "type": "object",
           "properties": {}
         }

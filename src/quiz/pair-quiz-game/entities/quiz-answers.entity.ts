@@ -1,8 +1,8 @@
 import { UserEntity } from "../../../users/user.entity"
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
-import { QuizGameEntity } from "./quiz-game.entity"
+import { QuizGameEntity } from "../../pair-quiz-game/entities/quiz-game.entity"
 import { AnswerStatuses } from "../../../helpers/answerStatuses"
-import { QuizQuestionEntity } from "../../../quiz/quiz-questions/entities/quiz-question.entity"
+import { QuizQuestionEntity } from "../../quiz-questions/entities/quiz-question.entity"
 
 @Entity('QuizAnswers')
 export class QuizAnswersEntity {

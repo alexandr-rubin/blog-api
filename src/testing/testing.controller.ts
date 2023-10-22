@@ -20,6 +20,7 @@ export class TestingController {
     await this.commentService.deleteCommentTesting()
     await this.postService.deletePostsTesting()
     await this.blogService.deleteBlogsTesting()
+    await this.quizGamesService.deleteAnswersTesting()
     await this.quizQuestionsService.deleteQuestionsTesting()
     await this.quizGamesService.deleteGamesTesting()
     await this.userService.deleteUsersTesting()

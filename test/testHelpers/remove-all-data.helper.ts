@@ -8,6 +8,7 @@ export async function removeAllData(httpServer, basicAuthCredentials: string) {
   await checkNoBlogs(httpServer)
   await checkNoPosts(httpServer)
   await checkNoQuestions(httpServer, basicAuthCredentials)
+  //add check no answers
 }
 
 async function checkNoUsers(httpServer, basicAuthCredentials: string) {

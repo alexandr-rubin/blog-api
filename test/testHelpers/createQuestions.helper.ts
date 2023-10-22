@@ -2,6 +2,8 @@ import { getTestConfiguration } from "../../test/config/test.config";
 import { HttpStatusCode } from "../../src/helpers/httpStatusCode";
 import request from 'supertest';
 import { QuizQuestionInputModel } from "../../src/quiz/quiz-questions/models/input/QuizQuestion";
+import { QuestionViewModel } from "../../src/quiz/pair-quiz-game/models/view/Questions";
+import { AnswerInputModel } from "../../src/quiz/pair-quiz-game/models/input/Answer";
 
 export async function createTenQuestions(httpServer) {
   const basicAuthCredentials = 'Basic ' + btoa(getTestConfiguration().basic_auth_credentials)
@@ -14,6 +16,19 @@ export async function createOneQuestion(httpServer, question: QuizQuestionInputM
   const basicAuthCredentials = 'Basic ' + btoa(getTestConfiguration().basic_auth_credentials)
   const questionRes = await request(httpServer).post('/sa/quiz/questions').set('Authorization', basicAuthCredentials).send(question).expect(HttpStatusCode.CREATED_201)
   return questionRes.body
+}
+
+export function getCorrectAnswers(questionsArray: QuestionViewModel[]): AnswerInputModel[] {
+  const answers: AnswerInputModel[] = [];
+
+  questionsArray.forEach(question => {
+    const foundQuestion = questions.find(q => q.body === question.body)
+    if (foundQuestion) {
+      answers.push({ answer: foundQuestion.correctAnswers[0] })
+    }
+  })
+
+  return answers
 }
 
 export const questions = [
