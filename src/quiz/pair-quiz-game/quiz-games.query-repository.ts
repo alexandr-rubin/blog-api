@@ -71,6 +71,11 @@ export class QuizGamesQueryRepository {
       finishGameDate: game.finishGameDate
     }
 
+    if(game.status === GameStatuses.PendingSecondPlayer){
+      result.questions = null
+      result.secondPlayerProgress = null
+    }
+
     return result
   }
 
