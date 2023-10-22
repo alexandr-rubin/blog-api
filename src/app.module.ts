@@ -132,31 +132,31 @@ import { QuizAnswersEntity } from './quiz/pair-quiz-game/entities/quiz-answers.e
       signOptions: { expiresIn: '10m' },
     }),
 
-    // TypeOrmModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   useFactory: (configService: ConfigService) => ({
-    //     type: 'postgres',
-    //     host: configService.get<string>('db.postgres.host'),
-    //     port: configService.get<number>('db.postgres.port'),
-    //     username: configService.get<string>('db.postgres.username'),
-    //     password: configService.get<string>('db.postgres.password'),
-    //     database: configService.get<string>('db.postgres.database'),
-    //     autoLoadEntities: true,
-    //     synchronize: false,
-    //   }),
-    //   inject: [ConfigService],
-    // }),
-
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'admin',
-      password: 'admin',
-      database: 'incubatorTypeormAuto',
-      autoLoadEntities: true,
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('db.postgres.host'),
+        port: configService.get<number>('db.postgres.port'),
+        username: configService.get<string>('db.postgres.username'),
+        password: configService.get<string>('db.postgres.password'),
+        database: configService.get<string>('db.postgres.database'),
+        autoLoadEntities: true,
+        synchronize: false,
+      }),
+      inject: [ConfigService],
     }),
+
+    // TypeOrmModule.forRoot({
+    //   type: 'postgres',
+    //   host: 'localhost',
+    //   port: 5432,
+    //   username: 'admin',
+    //   password: 'admin',
+    //   database: 'incubatorTypeormAuto',
+    //   autoLoadEntities: true,
+    //   synchronize: true,
+    // }),
 
     TypeOrmModule.forFeature([UserEntity, 
       APILogEntity, 
