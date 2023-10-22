@@ -449,11 +449,11 @@ describe('QuizGames (e2e)', () => {
     describe('POST -> "/pair-game-quiz/pairs/my-current/answers", GET -> "/pair-game-quiz/pairs", GET -> "/pair-game-quiz/pairs/my-current": create second game by user3, connect to the game by user4, then: add correct answer by firstPlayer; add incorrect answer by secondPlayer; add correct answer by secondPlayer; get active game; status 200;', () => {
       it(' create second game by user3', async function() {
         const res = await request(httpServer).post('/pair-game-quiz/pairs/connection').set('Authorization', 'Bearer ' + accessTokens[2]).expect(HttpStatusCode.OK_200)
-        secondGameAnswers = getCorrectAnswers(res.body.questions)
         secondGameId = res.body.id
       })
       it('connect to the game by user4', async function() {
-        await request(httpServer).post('/pair-game-quiz/pairs/connection').set('Authorization', 'Bearer ' + accessTokens[3]).expect(HttpStatusCode.OK_200)
+        const res = await request(httpServer).post('/pair-game-quiz/pairs/connection').set('Authorization', 'Bearer ' + accessTokens[3]).expect(HttpStatusCode.OK_200)
+        secondGameAnswers = getCorrectAnswers(res.body.questions)
       })
       it('add correct answer by firstPlayer;', async function() {
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[2]).send(secondGameAnswers[0]).expect(HttpStatusCode.OK_200)
@@ -527,11 +527,11 @@ describe('QuizGames (e2e)', () => {
     describe('POST -> "/pair-game-quiz/pairs/my-current/answers", GET -> "/pair-game-quiz/pairs", GET -> "/pair-game-quiz/pairs/my-current": create third game by user2, connect to the game by user1, then: add correct answer by firstPlayer; add incorrect answer by secondPlayer; add correct answer by secondPlayer; get active game"; status 200;', () => {
       it('create third game by user2', async function() {
         const res = await request(httpServer).post('/pair-game-quiz/pairs/connection').set('Authorization', 'Bearer ' + accessTokens[1]).expect(HttpStatusCode.OK_200)
-        thirdGameAnswers = getCorrectAnswers(res.body.questions)
         thirdGameId = res.body.id
       })
       it('connect to the game by user1', async function() {
-        await request(httpServer).post('/pair-game-quiz/pairs/connection').set('Authorization', 'Bearer ' + accessTokens[0]).expect(HttpStatusCode.OK_200)
+        const res = await request(httpServer).post('/pair-game-quiz/pairs/connection').set('Authorization', 'Bearer ' + accessTokens[0]).expect(HttpStatusCode.OK_200)
+        thirdGameAnswers = getCorrectAnswers(res.body.questions)
       })
       it('add correct answer by firstPlayer;', async function() {
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[1]).send(thirdGameAnswers[0]).expect(HttpStatusCode.OK_200)
@@ -570,11 +570,11 @@ describe('QuizGames (e2e)', () => {
     describe('POST -> "/pair-game-quiz/pairs/my-current/answers", GET -> "/pair-game-quiz/pairs", GET -> "/pair-game-quiz/pairs/my-current": create 4th game by user5, connect to the game by user6, then: add correct answer by firstPlayer; add incorrect answer by firstPlayer; add correct answer by secondPlayer; add incorrect answer by secondPlayer; add incorrect answer by secondPlayer; add incorrect answer by secondPlayer; add incorrect answer by secondPlayer; add correct answer by firstPlayer; add incorrect answer by firstPlayer; add incorrect answer by firstPlayer; draw with 2 scores; get active game and call "/pair-game-quiz/pairs/my-current by both users after each answer"; status 200;', () => {
       it('create 4th game by user5', async function() {
         const res = await request(httpServer).post('/pair-game-quiz/pairs/connection').set('Authorization', 'Bearer ' + accessTokens[4]).expect(HttpStatusCode.OK_200)
-        fourthGameAnswers = getCorrectAnswers(res.body.questions)
         fourthGameId = res.body.id
       })
       it('connect to the game by user6', async function() {
-        await request(httpServer).post('/pair-game-quiz/pairs/connection').set('Authorization', 'Bearer ' + accessTokens[5]).expect(HttpStatusCode.OK_200)
+        const res = await request(httpServer).post('/pair-game-quiz/pairs/connection').set('Authorization', 'Bearer ' + accessTokens[5]).expect(HttpStatusCode.OK_200)
+        fourthGameAnswers = getCorrectAnswers(res.body.questions)
       })
       it('add correct answer by firstPlayer;', async function() {
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[4]).send(fourthGameAnswers[0]).expect(HttpStatusCode.OK_200)
