@@ -130,6 +130,13 @@ export class QuizGamesQueryRepository {
           addedAt: answer.addedAt
       }
     })
+
+    mappedAnswers.sort((a, b) => {
+      if (a.addedAt < b.addedAt) return -1;
+      if (a.addedAt > b.addedAt) return 1;
+      return 0;
+    })
+
     return mappedAnswers
   }
 }
