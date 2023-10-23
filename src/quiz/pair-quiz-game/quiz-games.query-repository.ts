@@ -123,6 +123,7 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
 
       if (isFirstPlayer || isSecondPlayer) {
           const playerScore = isFirstPlayer ? modifiedGame.firstPlayerProgress.score : modifiedGame.secondPlayerProgress.score
+          statistic.sumScore += playerScore
           const isFirstPlayerWin = isFirstPlayer && playerScore > modifiedGame.secondPlayerProgress.score
           const isSecondPlayerWin = isSecondPlayer && playerScore > modifiedGame.firstPlayerProgress.score
           const isDraw = modifiedGame.firstPlayerProgress.score === modifiedGame.secondPlayerProgress.score
@@ -138,10 +139,6 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
             statistic.lossesCount++
           } else if (isDraw) {
             statistic.drawsCount++
-          }
-
-          if(isFirstPlayer || isSecondPlayerWin || isDraw){
-            statistic.sumScore += playerScore
           }
       }
     }
