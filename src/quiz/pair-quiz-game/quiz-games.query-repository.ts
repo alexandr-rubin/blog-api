@@ -39,10 +39,8 @@ async getMyStatistic(userId: string): Promise<StatisticViewModel> {
       .andWhere('(game.status = :status)', { status: GameStatuses.Finished })
       .getMany()
 
-  const modifiedArray = await Promise.all(games.map(element => this.mapGame(element)))
 
-
-  const statistic = this.calculateStatistics(modifiedArray, userId)
+  const statistic = await this.calculateStatistics(games, userId)
 
   return statistic
 }
@@ -104,7 +102,7 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
     return result
   }
 
-  private calculateStatistics(modifiedArray: GamePairViewModel[], userId: string): StatisticViewModel {
+  private async calculateStatistics(games: QuizGameEntity[], userId: string): Promise<StatisticViewModel> {
     const statistic: StatisticViewModel = {
       sumScore: 0,
       avgScores: 0,
@@ -114,25 +112,28 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
       drawsCount: 0
   }
 
-    for (const modifiedGame of modifiedArray) {
-      const isFirstPlayer = modifiedGame.firstPlayerProgress.player.id === userId
-      const isSecondPlayer = modifiedGame.secondPlayerProgress.player.id === userId
+    for (const game of games) {
+      const isFirstPlayer = game.player1Id === userId
+      const isSecondPlayer = game.player2Id === userId
+
+      const allGameAnswers = await this.getAnswersForGame(game, game.player1Id, game.player2Id)
+      const score = this.countScoreForGame(allGameAnswers)
 
       if (isFirstPlayer || isSecondPlayer) {
-          const playerScore = isFirstPlayer ? modifiedGame.firstPlayerProgress.score : modifiedGame.secondPlayerProgress.score
+          const playerScore = isFirstPlayer ? score.firstPlayerScore : score.secondPlayerScore
           statistic.sumScore += playerScore
-          const isFirstPlayerWin = isFirstPlayer && playerScore > modifiedGame.secondPlayerProgress.score
-          const isSecondPlayerWin = isSecondPlayer && playerScore > modifiedGame.firstPlayerProgress.score
-          const isDraw = modifiedGame.firstPlayerProgress.score === modifiedGame.secondPlayerProgress.score
+          const isFirstPlayerWin = isFirstPlayer && playerScore > score.secondPlayerScore
+          const isSecondPlayerWin = isSecondPlayer && playerScore > score.firstPlayerScore
+          const isDraw = score.firstPlayerScore === score.secondPlayerScore
 
 
           if (isFirstPlayerWin) {
             statistic.winsCount++
           } else if (isSecondPlayerWin) {
             statistic.winsCount++
-          } else if (isFirstPlayer && playerScore < modifiedGame.secondPlayerProgress.score) {
+          } else if (isFirstPlayer && playerScore < score.secondPlayerScore) {
             statistic.lossesCount++
-          } else if (isSecondPlayer && playerScore < modifiedGame.firstPlayerProgress.score) {
+          } else if (isSecondPlayer && playerScore < score.firstPlayerScore) {
             statistic.lossesCount++
           } else if (isDraw) {
             statistic.drawsCount++
