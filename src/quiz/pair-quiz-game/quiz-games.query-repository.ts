@@ -186,7 +186,7 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
     if(answers.firstPlayerAnswers.length === 5 && answers.secondPlayerAnswers.length === 5){
       const firstPlayerFinishedFirst = answers.firstPlayerAnswers[answers.firstPlayerAnswers.length - 1].addedAt < answers.secondPlayerAnswers[answers.secondPlayerAnswers.length - 1].addedAt;
 
-      if (firstPlayerFinishedFirst && firstPlayerCorrectAnswersCount > 1) {
+      if (firstPlayerFinishedFirst && firstPlayerCorrectAnswersCount > 0) {
         firstPlayerCorrectAnswersCount++
       }
       else if(secondPlayerCorrectAnswersCount > 0){
