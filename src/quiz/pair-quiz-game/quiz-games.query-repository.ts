@@ -39,6 +39,11 @@ async getMyStatistic(userId: string): Promise<StatisticViewModel> {
       .andWhere('(game.status = :status)', { status: GameStatuses.Finished })
       .getMany()
 
+      const modifiedArray = await Promise.all(games.map(async element => {
+        return await this.mapGame(element)
+      }))
+
+      console.log(modifiedArray)
 
   const statistic = await this.calculateStatistics(games, userId)
 
@@ -191,7 +196,7 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
       if (firstPlayerFinishedFirst && firstPlayerCorrectAnswersCount > 0) {
         firstPlayerCorrectAnswersCount++
       }
-      else if(secondPlayerCorrectAnswersCount > 0){
+      else if(!firstPlayerFinishedFirst && secondPlayerCorrectAnswersCount > 0){
         secondPlayerCorrectAnswersCount++
       }
     }
