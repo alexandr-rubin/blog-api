@@ -36,6 +36,7 @@ export class QuizGamesQueryRepository {
 async getMyStatistic(userId: string): Promise<StatisticViewModel> {
   const games = await this.quizGamesRepository.createQueryBuilder('game')
       .where('(game.player1Id = :userId OR game.player2Id = :userId)', { userId })
+      .andWhere('(game.status = :status)', { status: GameStatuses.Finished })
       .getMany()
 
   const modifiedArray = await Promise.all(games.map(async element => {
@@ -115,9 +116,6 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
   }
 
     for (const modifiedGame of modifiedArray) {
-      if(modifiedGame.status === GameStatuses.PendingSecondPlayer || modifiedGame.status === GameStatuses.Active){
-        continue
-      }
       const isFirstPlayer = modifiedGame.firstPlayerProgress.player.id === userId
       const isSecondPlayer = !isFirstPlayer ? modifiedGame.secondPlayerProgress.player.id === userId : false
 
@@ -202,12 +200,20 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
   }
 
   private countCorrectAnswers = (answers: AnswerViewModel[]) => {
-    return answers.reduce((count, answer) => {
-        if (answer.answerStatus === AnswerStatuses.Correct) {
-            count++
-        }
-        return count
-    }, 0)
+    let count = 0
+    for(const answer of answers){
+      if(answer.answerStatus === AnswerStatuses.Correct){
+        count++
+      }
+    }
+
+    return count
+    // return answers.reduce((count, answer) => {
+    //     if (answer.answerStatus === AnswerStatuses.Correct) {
+    //         count++
+    //     }
+    //     return count
+    // }, 0)
   }
 
   private async getAnswersForGame(game: QuizGameEntity, player1Id: string, player2Id: string): Promise<AllGameAnswersViewModel> {
