@@ -11,6 +11,9 @@ import { AllGameAnswersViewModel } from "./models/view/AllGameAnswers";
 import { AllGameScoreViewModel } from "./models/view/GameScore";
 import { AnswerStatuses } from "../../helpers/answerStatuses";
 import { StatisticViewModel } from "./models/view/Statistic";
+import { Paginator } from "../../models/Paginator";
+import { QueryParamsModel } from "../../models/PaginationQuery";
+import { createPaginationQuery } from "../../helpers/pagination";
 
 @Injectable()
 export class QuizGamesQueryRepository {
@@ -42,6 +45,39 @@ async getMyStatistic(userId: string): Promise<StatisticViewModel> {
   const statistic = this.calculateStatistics(modifiedArray, userId)
 
   return statistic
+}
+
+async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator<GamePairViewModel>> {
+  const query = createPaginationQuery(params)
+  const skip = (query.pageNumber - 1) * query.pageSize
+  if(query.sortBy === 'createdAt'){
+    query.sortBy = 'pairCreatedDate'
+  }
+
+  const whereFilter = '(game.player1Id = :userId OR game.player2Id = :userId)'
+  const games = await this.quizGamesRepository
+    .createQueryBuilder('game')
+    .select()
+    .where(whereFilter, { userId })
+    .addOrderBy(`game.${query.sortBy} COLLATE "C"`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
+    .addOrderBy('game.pairCreatedDate', 'DESC')
+    .skip(skip)
+    .take(query.pageSize)
+    .getMany()
+
+  const mappedGames: GamePairViewModel[] = await Promise.all(games.map(async (game) => {
+    const mappedGame = await this.mapGame(game);
+    return mappedGame
+  }))
+
+  const count = await this.quizGamesRepository
+    .createQueryBuilder('game')
+    .where(whereFilter, { userId })
+    .getCount()
+
+    const result = Paginator.createPaginationResult(count, query, mappedGames)
+
+    return result
 }
 
   async getMyCurrentGame(userId: string): Promise<GamePairViewModel> {

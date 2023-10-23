@@ -1208,6 +1208,17 @@ window.onload = function() {
           }
         }
       },
+      "/pair-game-quiz/pairs/my": {
+        "get": {
+          "operationId": "QuizGamesController_getAllMyGames",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          }
+        }
+      },
       "/pair-game-quiz/pairs/my-current": {
         "get": {
           "operationId": "QuizGamesController_getMyCurrentGame",
