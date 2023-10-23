@@ -10,23 +10,38 @@ import { AnswerViewModel } from "./models/view/Answer";
 import { AllGameAnswersViewModel } from "./models/view/AllGameAnswers";
 import { AllGameScoreViewModel } from "./models/view/GameScore";
 import { AnswerStatuses } from "../../helpers/answerStatuses";
+import { StatisticViewModel } from "./models/view/Statistic";
 
 @Injectable()
 export class QuizGamesQueryRepository {
-  constructor(@InjectRepository(QuizGameEntity) private readonly quizQuestionsRepository: Repository<QuizGameEntity>,
+  constructor(@InjectRepository(QuizGameEntity) private readonly quizGamesRepository: Repository<QuizGameEntity>,
   private readonly userQueryRepository: UserQueryRepository, 
   @InjectRepository(QuizAnswersEntity) private readonly quizAnswersRepository: Repository<QuizAnswersEntity>){}
   
   async findPendingSecondPlayerGame(): Promise<QuizGameEntity | null> {
-    return await this.quizQuestionsRepository.findOneBy({status: GameStatuses.PendingSecondPlayer})
+    return await this.quizGamesRepository.findOneBy({status: GameStatuses.PendingSecondPlayer})
   }
 
   async findActiveGameForUser(userId: string): Promise<QuizGameEntity | null> {
-    const game = await this.quizQuestionsRepository.createQueryBuilder('game')
+    const game = await this.quizGamesRepository.createQueryBuilder('game')
       .where('(game.player1Id = :userId OR game.player2Id = :userId)', { userId })
       .andWhere('game.status IN (:...statuses)', { statuses: [GameStatuses.Active, GameStatuses.PendingSecondPlayer] })
-      .getOne();
-    return game || null;
+      .getOne()
+    return game || null
+}
+
+async getMyStatistic(userId: string): Promise<StatisticViewModel> {
+  const games = await this.quizGamesRepository.createQueryBuilder('game')
+      .where('(game.player1Id = :userId OR game.player2Id = :userId)', { userId })
+      .getMany()
+
+  const modifiedArray = await Promise.all(games.map(async element => {
+    return await this.mapGame(element)
+  }))
+
+  const statistic = this.calculateStatistics(modifiedArray, userId)
+
+  return statistic
 }
 
   async getMyCurrentGame(userId: string): Promise<GamePairViewModel> {
@@ -40,7 +55,7 @@ export class QuizGamesQueryRepository {
   }
 
   async getGameById(id: string, userId: string): Promise<GamePairViewModel> {
-    const game = await this.quizQuestionsRepository.findOneBy({id: id})
+    const game = await this.quizGamesRepository.findOneBy({id: id})
     if(!game){
       throw new NotFoundException('Game is not found.')
     }
@@ -52,6 +67,50 @@ export class QuizGamesQueryRepository {
 
     return result
   }
+
+  private calculateStatistics(modifiedArray: GamePairViewModel[], userId: string): StatisticViewModel {
+    let sumScore = 0;
+    let winsCount = 0;
+    let lossesCount = 0;
+    let drawsCount = 0;
+
+    for (const modifiedGame of modifiedArray) {
+        const isFirstPlayer = modifiedGame.firstPlayerProgress.player.id === userId
+        const isSecondPlayer = modifiedGame.secondPlayerProgress.player.id === userId
+
+        if (isFirstPlayer || isSecondPlayer) {
+            const playerScore = isFirstPlayer ? modifiedGame.firstPlayerProgress.score : modifiedGame.secondPlayerProgress.score
+            sumScore += playerScore
+
+            if (isFirstPlayer && playerScore > modifiedGame.secondPlayerProgress.score) {
+                winsCount++
+            } else if (isSecondPlayer && playerScore > modifiedGame.firstPlayerProgress.score) {
+                winsCount++
+            } else if (isFirstPlayer && playerScore < modifiedGame.secondPlayerProgress.score) {
+                lossesCount++
+            } else if (isSecondPlayer && playerScore < modifiedGame.firstPlayerProgress.score) {
+              lossesCount++
+            } else if (modifiedGame.firstPlayerProgress.score === modifiedGame.secondPlayerProgress.score) {
+                drawsCount++
+            }
+        }
+    }
+
+    const gamesCount = winsCount + lossesCount + drawsCount
+    const avgScores = gamesCount > 0 ? sumScore / gamesCount : 0
+    const roundedAvgScore = parseFloat(avgScores.toFixed(2));
+
+    const statistic: StatisticViewModel = {
+        sumScore,
+        avgScores: roundedAvgScore,
+        gamesCount,
+        winsCount,
+        lossesCount,
+        drawsCount
+    }
+
+    return statistic
+}
 
   private async mapGame(game: QuizGameEntity) {
     const player1 = await this.userQueryRepository.getUsergByIdNoView(game.player1Id)
@@ -80,7 +139,7 @@ export class QuizGamesQueryRepository {
   }
 
   async getGameByIdNoView(id: string): Promise<QuizGameEntity | null> {
-    const game = await this.quizQuestionsRepository.findOneBy({id: id})
+    const game = await this.quizGamesRepository.findOneBy({id: id})
 
     return game
   }

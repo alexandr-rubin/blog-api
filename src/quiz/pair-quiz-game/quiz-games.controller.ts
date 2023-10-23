@@ -8,29 +8,34 @@ import { QuizGameIdValidationPipe } from "../../validation/pipes/game-id-validat
 import { AnswerInputModel } from "./models/input/Answer";
 
 @UseGuards(JwtAuthGuard)
-@Controller('pair-game-quiz/pairs')
+@Controller('pair-game-quiz')
 export class QuizGamesController {
   constructor(private readonly quizGamesService: QuizGamesService, private readonly quizGamesQueryRepository: QuizGamesQueryRepository){}
 
   @HttpCode(HttpStatusCode.OK_200)
-  @Post('connection')
+  @Post('pairs/connection')
   async createOrConnectToTheGame(@Req() req: AccessTokenVrifyModel) {
     return await this.quizGamesService.createOrConnectToTheGame(req.user.userId)
   }
 
   @HttpCode(HttpStatusCode.OK_200)
-  @Post('my-current/answers')
+  @Post('pairs/my-current/answers')
   async answerCurrentGameQuestion(@Body() answer: AnswerInputModel, @Req() req: AccessTokenVrifyModel) {
     return this.quizGamesService.answerCurrentGameQuestion(answer.answer, req.user.userId)
   }
 
-  @Get('my-current')
+  @Get('pairs/my-current')
   async getMyCurrentGame(@Req() req: AccessTokenVrifyModel) {
     return await this.quizGamesQueryRepository.getMyCurrentGame(req.user.userId)
   }
 
-  @Get(':gameId')
+  @Get('pairs/:gameId')
   async getGameById(@Param('gameId', QuizGameIdValidationPipe) gameId: string, @Req() req: AccessTokenVrifyModel) {
     return await this.quizGamesQueryRepository.getGameById(gameId, req.user.userId)
+  }
+
+  @Get('users/my-statistic')
+  async getMyStatistic(@Req() req: AccessTokenVrifyModel) {
+    return await this.quizGamesQueryRepository.getMyStatistic(req.user.userId)
   }
 }

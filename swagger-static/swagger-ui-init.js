@@ -1238,6 +1238,17 @@ window.onload = function() {
             }
           }
         }
+      },
+      "/pair-game-quiz/users/my-statistic": {
+        "get": {
+          "operationId": "QuizGamesController_getMyStatistic",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          }
+        }
       }
     },
     "info": {
