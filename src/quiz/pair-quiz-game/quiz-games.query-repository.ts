@@ -105,45 +105,44 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
   }
 
   private calculateStatistics(modifiedArray: GamePairViewModel[], userId: string): StatisticViewModel {
-    let sumScore = 0;
-    let winsCount = 0;
-    let lossesCount = 0;
-    let drawsCount = 0;
+    const statistic: StatisticViewModel = {
+      sumScore: 0,
+      avgScores: 0,
+      gamesCount: 0,
+      winsCount: 0,
+      lossesCount: 0,
+      drawsCount: 0
+  }
 
     for (const modifiedGame of modifiedArray) {
-        const isFirstPlayer = modifiedGame.firstPlayerProgress.player.id === userId
-        const isSecondPlayer = modifiedGame.secondPlayerProgress.player.id === userId
+      if(modifiedGame.status === GameStatuses.PendingSecondPlayer || modifiedGame.status === GameStatuses.Active){
+        continue
+      }
+      const isFirstPlayer = modifiedGame.firstPlayerProgress.player.id === userId
+      const isSecondPlayer = !isFirstPlayer ? modifiedGame.secondPlayerProgress.player.id === userId : false
 
-        if (isFirstPlayer || isSecondPlayer) {
-            const playerScore = isFirstPlayer ? modifiedGame.firstPlayerProgress.score : modifiedGame.secondPlayerProgress.score
-            sumScore += playerScore
+      if (isFirstPlayer || isSecondPlayer) {
+          const playerScore = isFirstPlayer ? modifiedGame.firstPlayerProgress.score : modifiedGame.secondPlayerProgress.score
+          statistic.sumScore += playerScore
 
-            if (isFirstPlayer && playerScore > modifiedGame.secondPlayerProgress.score) {
-                winsCount++
-            } else if (isSecondPlayer && playerScore > modifiedGame.firstPlayerProgress.score) {
-                winsCount++
-            } else if (isFirstPlayer && playerScore < modifiedGame.secondPlayerProgress.score) {
-                lossesCount++
-            } else if (isSecondPlayer && playerScore < modifiedGame.firstPlayerProgress.score) {
-              lossesCount++
-            } else if (modifiedGame.firstPlayerProgress.score === modifiedGame.secondPlayerProgress.score) {
-                drawsCount++
-            }
-        }
+          if (isFirstPlayer && playerScore > modifiedGame.secondPlayerProgress.score) {
+            statistic.winsCount++
+          } else if (isSecondPlayer && playerScore > modifiedGame.firstPlayerProgress.score) {
+            statistic.winsCount++
+          } else if (isFirstPlayer && playerScore < modifiedGame.secondPlayerProgress.score) {
+            statistic.lossesCount++
+          } else if (isSecondPlayer && playerScore < modifiedGame.firstPlayerProgress.score) {
+            statistic.lossesCount++
+          } else if (modifiedGame.firstPlayerProgress.score === modifiedGame.secondPlayerProgress.score) {
+            statistic.drawsCount++
+          }
+      }
     }
 
-    const gamesCount = winsCount + lossesCount + drawsCount
-    const avgScores = gamesCount > 0 ? sumScore / gamesCount : 0
-    const roundedAvgScore = parseFloat(avgScores.toFixed(2));
-
-    const statistic: StatisticViewModel = {
-        sumScore,
-        avgScores: roundedAvgScore,
-        gamesCount,
-        winsCount,
-        lossesCount,
-        drawsCount
-    }
+    const gamesCount = statistic.winsCount + statistic.lossesCount + statistic.drawsCount
+    statistic.gamesCount = gamesCount
+    const avgScores = gamesCount > 0 ? statistic.sumScore / gamesCount : 0
+    statistic.avgScores = parseFloat(avgScores.toFixed(2))
 
     return statistic
 }
