@@ -39,12 +39,6 @@ async getMyStatistic(userId: string): Promise<StatisticViewModel> {
       .andWhere('(game.status = :status)', { status: GameStatuses.Finished })
       .getMany()
 
-      const modifiedArray = await Promise.all(games.map(async element => {
-        return await this.mapGame(element)
-      }))
-
-      console.log(modifiedArray)
-
   const statistic = await this.calculateStatistics(games, userId)
 
   return statistic
