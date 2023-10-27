@@ -1,4 +1,4 @@
-import { UserEntity } from "../../users/user.entity"
+import { UserEntity } from "../../users/entities/user.entity"
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm"
 import { UUID } from "typeorm/driver/mongodb/bson.typings"
 import { BlogEntity } from "./blog.entity"

@@ -24,8 +24,30 @@ export class QuizGamesRepository {
     return await this.quizGamesRepository.update({id: gameId}, {finishGameDate: finishGameDate, status: status})
   }
 
-  async createAnswer(answer: CreateAnswerInputModel) {
+  async createAnswer(answer: CreateAnswerInputModel): Promise<QuizAnswersEntity> {
     return await this.quizAnswersRepository.save(answer)
+  }
+
+  async increasefirstPlayerScore(gameId: string): Promise<UpdateResult> {
+    const updateResult: UpdateResult = await this.quizGamesRepository
+    .createQueryBuilder()
+    .update()
+    .set({ firstPlayerScore: () => '"firstPlayerScore" + 1' })
+    .where('id = :gameId', { gameId })
+    .execute()
+
+    return updateResult
+  }
+
+  async increaseSecondPlayerScore(gameId: string): Promise<UpdateResult> {
+    const updateResult: UpdateResult = await this.quizGamesRepository
+    .createQueryBuilder()
+    .update()
+    .set({ secondPlayerScore: () => '"secondPlayerScore" + 1' })
+    .where('id = :gameId', { gameId })
+    .execute()
+
+    return updateResult
   }
 
   async deleteGamesTesting(): Promise<boolean> {

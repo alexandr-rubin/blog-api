@@ -5,7 +5,7 @@ import { LoginValidation } from "../validation/login";
 import { User, UserDocument } from "./models/schemas/User";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { DataSource, DeleteResult, Repository, UpdateResult } from "typeorm";
-import { UserEntity } from "./user.entity";
+import { UserEntity } from "./entities/user.entity";
 
 @Injectable()
 export class UserRepository {

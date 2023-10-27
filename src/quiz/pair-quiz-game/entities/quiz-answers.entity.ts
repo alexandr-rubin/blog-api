@@ -1,4 +1,4 @@
-import { UserEntity } from "../../../users/user.entity"
+import { UserEntity } from "../../../users/entities/user.entity"
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
 import { QuizGameEntity } from "../../pair-quiz-game/entities/quiz-game.entity"
 import { AnswerStatuses } from "../../../helpers/answerStatuses"

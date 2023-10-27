@@ -1,5 +1,5 @@
 import { UUID } from "crypto"
-import { UserEntity } from "../users/user.entity"
+import { UserEntity } from "../users/entities/user.entity"
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
 
 @Entity('Devices')

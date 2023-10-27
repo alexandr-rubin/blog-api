@@ -27,31 +27,31 @@ export class QuizGamesQueryRepository {
 
   async findActiveGameForUser(userId: string): Promise<QuizGameEntity | null> {
     const game = await this.quizGamesRepository.createQueryBuilder('game')
-      .where('(game.player1Id = :userId OR game.player2Id = :userId)', { userId })
+      .where('(game.playerOneId = :userId OR game.playerTwoId = :userId)', { userId })
       .andWhere('game.status IN (:...statuses)', { statuses: [GameStatuses.Active, GameStatuses.PendingSecondPlayer] })
       .getOne()
     return game || null
-}
-
-async getMyStatistic(userId: string): Promise<StatisticViewModel> {
-  const games = await this.quizGamesRepository.createQueryBuilder('game')
-      .where('(game.player1Id = :userId OR game.player2Id = :userId)', { userId })
-      .andWhere('(game.status = :status)', { status: GameStatuses.Finished })
-      .getMany()
-
-  const statistic = await this.calculateStatistics(games, userId)
-
-  return statistic
-}
-
-async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator<GamePairViewModel>> {
-  const query = createPaginationQuery(params)
-  const skip = (query.pageNumber - 1) * query.pageSize
-  if(query.sortBy === 'createdAt'){
-    query.sortBy = 'pairCreatedDate'
   }
 
-  const whereFilter = '(game.player1Id = :userId OR game.player2Id = :userId)'
+  async getMyStatistic(userId: string): Promise<StatisticViewModel> {
+    const games = await this.quizGamesRepository.createQueryBuilder('game')
+        .where('(game.playerOneId = :userId OR game.playerTwoId = :userId)', { userId })
+        .andWhere('(game.status = :status)', { status: GameStatuses.Finished })
+        .getMany()
+
+    const statistic = await this.calculateStatistics(games, userId)
+
+    return statistic
+  }
+
+  async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator<GamePairViewModel>> {
+    const query = createPaginationQuery(params)
+    const skip = (query.pageNumber - 1) * query.pageSize
+    if(query.sortBy === 'createdAt'){
+      query.sortBy = 'pairCreatedDate'
+    }
+
+  const whereFilter = '(game.playerOneId = :userId OR game.playerTwoId = :userId)'
   const games = await this.quizGamesRepository
     .createQueryBuilder('game')
     .select()
@@ -75,7 +75,7 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
     const result = Paginator.createPaginationResult(count, query, mappedGames)
 
     return result
-}
+  }
 
   async getMyCurrentGame(userId: string): Promise<GamePairViewModel> {
     const game = await this.findActiveGameForUser(userId)
@@ -92,7 +92,7 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
     if(!game){
       throw new NotFoundException('Game is not found.')
     }
-    if(game.player1Id !== userId && game.player2Id !== userId){
+    if(game.playerOneId !== userId && game.playerTwoId !== userId){
       throw new ForbiddenException('No access to this game.')
     }
     
@@ -109,30 +109,30 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
       winsCount: 0,
       lossesCount: 0,
       drawsCount: 0
-  }
+    }
 
     for (const game of games) {
-      const isFirstPlayer = game.player1Id === userId
-      const isSecondPlayer = game.player2Id === userId
+      const isFirstPlayer = game.playerOneId === userId
+      const isSecondPlayer = game.playerTwoId === userId
 
-      const allGameAnswers = await this.getAnswersForGame(game, game.player1Id, game.player2Id)
-      const score = this.countScoreForGame(allGameAnswers)
+      //const allGameAnswers = await this.getAnswersForGame(game, game.player1Id, game.player2Id)
+      // const score = this.countScoreForGame(allGameAnswers)
 
       if (isFirstPlayer || isSecondPlayer) {
-          const playerScore = isFirstPlayer ? score.firstPlayerScore : score.secondPlayerScore
+          const playerScore = isFirstPlayer ? game.firstPlayerScore : game.secondPlayerScore
           statistic.sumScore += playerScore
-          const isFirstPlayerWin = isFirstPlayer && playerScore > score.secondPlayerScore
-          const isSecondPlayerWin = isSecondPlayer && playerScore > score.firstPlayerScore
-          const isDraw = score.firstPlayerScore === score.secondPlayerScore
+          const isFirstPlayerWin = isFirstPlayer && playerScore > game.secondPlayerScore
+          const isSecondPlayerWin = isSecondPlayer && playerScore > game.firstPlayerScore
+          const isDraw = game.firstPlayerScore === game.secondPlayerScore
 
 
           if (isFirstPlayerWin) {
             statistic.winsCount++
           } else if (isSecondPlayerWin) {
             statistic.winsCount++
-          } else if (isFirstPlayer && playerScore < score.secondPlayerScore) {
+          } else if (isFirstPlayer && playerScore < game.secondPlayerScore) {
             statistic.lossesCount++
-          } else if (isSecondPlayer && playerScore < score.firstPlayerScore) {
+          } else if (isSecondPlayer && playerScore < game.firstPlayerScore) {
             statistic.lossesCount++
           } else if (isDraw) {
             statistic.drawsCount++
@@ -146,19 +146,19 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
     statistic.avgScores = parseFloat(avgScores.toFixed(2))
 
     return statistic
-}
+  }
 
   private async mapGame(game: QuizGameEntity) {
-    const player1 = await this.userQueryRepository.getUsergByIdNoView(game.player1Id)
-    const player2Login = game.player2Id !== null ? (await this.userQueryRepository.getUsergByIdNoView(game.player2Id)).login : game.player2Id
+    const player1 = await this.userQueryRepository.getUsergByIdNoView(game.playerOneId)
+    const player2Login = game.playerTwoId !== null ? (await this.userQueryRepository.getUsergByIdNoView(game.playerTwoId)).login : game.playerTwoId
 
-    const allGameAnswers = await this.getAnswersForGame(game, player1.id, game.player2Id)
-    const score = this.countScoreForGame(allGameAnswers)
+    const allGameAnswers = await this.getAnswersForGame(game, player1.id, game.playerTwoId)
+    // const score = this.countScoreForGame(allGameAnswers)
 
     const result: GamePairViewModel = {
       id: game.id, 
-      firstPlayerProgress: {answers: allGameAnswers.firstPlayerAnswers, player: {id: game.player1Id, login: player1.login }, score: score.firstPlayerScore},
-      secondPlayerProgress: {answers: allGameAnswers.secondPlayerAnswers, player: {id: game.player2Id, login: player2Login}, score: score.secondPlayerScore},
+      firstPlayerProgress: {answers: allGameAnswers.firstPlayerAnswers, player: {id: game.playerOneId, login: player1.login }, score: game.firstPlayerScore},
+      secondPlayerProgress: {answers: allGameAnswers.secondPlayerAnswers, player: {id: game.playerTwoId, login: player2Login}, score: game.secondPlayerScore},
       questions: game.questions,
       status: game.status,
       pairCreatedDate: game.pairCreatedDate,
@@ -180,7 +180,7 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
     return game
   }
 
-  private countScoreForGame(answers: AllGameAnswersViewModel): AllGameScoreViewModel{
+  private countScoreForGameByAnswers(answers: AllGameAnswersViewModel): AllGameScoreViewModel{
     let firstPlayerCorrectAnswersCount = this.countCorrectAnswers(answers.firstPlayerAnswers)
     let secondPlayerCorrectAnswersCount = this.countCorrectAnswers(answers.secondPlayerAnswers)
 
@@ -207,12 +207,6 @@ async getAllMyGames(userId: string, params: QueryParamsModel): Promise<Paginator
     }
 
     return count
-    // return answers.reduce((count, answer) => {
-    //     if (answer.answerStatus === AnswerStatuses.Correct) {
-    //         count++
-    //     }
-    //     return count
-    // }, 0)
   }
 
   private async getAnswersForGame(game: QuizGameEntity, player1Id: string, player2Id: string): Promise<AllGameAnswersViewModel> {

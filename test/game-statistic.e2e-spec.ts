@@ -47,6 +47,8 @@ describe('QuizGames (e2e)', () => {
           return getTestConfiguration().jwt_secret_key
         if(key === 'BASIC_AUTH_CREDENTIALS')
           return getTestConfiguration().basic_auth_credentials
+        if(key === '<MAIL_PASS>')
+          return getTestConfiguration().mail_password
       },
     })
     .compile();

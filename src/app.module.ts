@@ -63,7 +63,7 @@ import { BloggerBlogsUsersController } from './blogs/blogs-users.controller';
 import { BlogBannedUsers, BlogBannedUsersSchema } from './blogs/models/schemas/BlogBannedUsers';
 import { UpdateCommentLikeStatusUseCase } from './comments/use-cases/update-comment-like-use-case';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserEntity } from './users/user.entity';
+import { UserEntity } from './users/entities/user.entity';
 import { APILogEntity } from './security/ALILogs.entity';
 import { BlogEntity } from './blogs/entities/blog.entity';
 import { BlogBannedUsersEntity } from './blogs/entities/blog-banned-users.entity';
@@ -85,6 +85,8 @@ import { QuizGamesController } from './quiz/pair-quiz-game/quiz-games.controller
 import { QuizGamesQueryRepository } from './quiz/pair-quiz-game/quiz-games.query-repository';
 import { QuizGameExistValidator } from './validation/GameExistValidator';
 import { QuizAnswersEntity } from './quiz/pair-quiz-game/entities/quiz-answers.entity';
+import { AnswerCurrentGameQuestionUseCase } from './quiz/pair-quiz-game/use-cases/answer-current-game-question-use-case';
+import { CreateOrConnectToTheGameUseCase } from './quiz/pair-quiz-game/use-cases/create-or-connect-to-the-game-use-case';
 
 @Module({
   imports: [
@@ -111,7 +113,7 @@ import { QuizAnswersEntity } from './quiz/pair-quiz-game/entities/quiz-answers.e
         service: 'gmail',
         auth: {
           user: 'rubinyourhead@gmail.com',
-          pass: 'kixbxpkqgkdbabte',
+          pass: process.env.MAIL_PASS,
         },
       },
       defaults: {
@@ -201,7 +203,7 @@ import { QuizAnswersEntity } from './quiz/pair-quiz-game/entities/quiz-answers.e
     AuthorizationService, AuthorizationRepository,
     LoginValidation, SecurityService, SecurityRepository, SecurityQueryRepository,
     QuizQuestionsService, QuizQuestionsRepository, QuizQuestionsQueryRepository, QuestionExistValidator,
-    QuizGamesService, QuizGamesRepository, QuizGamesQueryRepository, QuizGameExistValidator],
+    QuizGamesService, QuizGamesRepository, QuizGamesQueryRepository, QuizGameExistValidator, AnswerCurrentGameQuestionUseCase, CreateOrConnectToTheGameUseCase],
 })
 
 export class AppModule {}

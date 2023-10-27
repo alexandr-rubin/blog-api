@@ -1,6 +1,6 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
 import { PostEntity } from "./post.entity"
-import { UserEntity } from "../../users/user.entity"
+import { UserEntity } from "../../users/entities/user.entity"
 
 @Entity('PostLikesAndDislikes')
 export class PostLikesAndDislikesEntity {

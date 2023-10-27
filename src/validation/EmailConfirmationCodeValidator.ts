@@ -1,6 +1,6 @@
 import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 import { UserQueryRepository } from '../users/user.query-repository';
-import { UserEntity } from '../users/user.entity';
+import { UserEntity } from '../users/entities/user.entity';
 
 @ValidatorConstraint({ async: true })
 export class EmailConfirmationCodeValidator implements ValidatorConstraintInterface {

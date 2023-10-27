@@ -1,4 +1,4 @@
-import { UserEntity } from "../../users/user.entity"
+import { UserEntity } from "../../users/entities/user.entity"
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
 import { CommentEntity } from "./comment.entity"
 

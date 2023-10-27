@@ -2,7 +2,7 @@ import { GameStatuses } from "../../../../helpers/gameStatuses"
 import { QuestionViewModel } from "../view/Questions"
 
 export class CreateQuizGameInputModel {
-  player1Id: string
+  playerOneId: string
   status: GameStatuses
   pairCreatedDate: string
   questions: QuestionViewModel[]

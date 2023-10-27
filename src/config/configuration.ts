@@ -14,7 +14,8 @@ export const getConfiguration = () => ({
     },
   },
   jwt_secret_key: process.env.JWT_SECRET_KEY ?? 'SECRETKEY',
-  basic_auth_credentials: process.env.BASIC_AUTH_CREDENTIALS ?? 'BASIC_AUTH_CREDENTIALS'
+  basic_auth_credentials: process.env.BASIC_AUTH_CREDENTIALS ?? 'BASIC_AUTH_CREDENTIALS',
+  mail_password: process.env.MAIL_PASS
 })
 
 type ConfigurationType = ReturnType<typeof getConfiguration>
@@ -28,4 +29,5 @@ export type ConfigType = ConfigurationType & {
   DB_PASSWORD: string
   DB_NAME: string
   BASIC_AUTH_CREDENTIALS: string
+  MAIL_PASS: string
 }
