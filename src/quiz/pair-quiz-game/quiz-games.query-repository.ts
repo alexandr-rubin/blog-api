@@ -12,6 +12,7 @@ import { StatisticViewModel } from "./models/view/Statistic";
 import { Paginator } from "../../models/Paginator";
 import { QueryParamsModel } from "../../models/PaginationQuery";
 import { createPaginationQuery } from "../../helpers/pagination";
+import { UserTopViewModel } from "./models/view/userTop";
 
 @Injectable()
 export class QuizGamesQueryRepository {
@@ -19,16 +20,19 @@ export class QuizGamesQueryRepository {
   private readonly userQueryRepository: UserQueryRepository, 
   @InjectRepository(QuizAnswersEntity) private readonly quizAnswersRepository: Repository<QuizAnswersEntity>){}
   
-  async getUsersTop(params: QueryParamsModel)/*: Promise<Paginator<StatisticViewModel>>*/ {
+  async getUsersTop(params: QueryParamsModel): Promise<Paginator<UserTopViewModel>> {
     const query = createPaginationQuery(params)
-    const usersStatistic = []
-    const uniquePlayerIds = await this.userQueryRepository.getUsersRelatedToGames()
-    for(const player of uniquePlayerIds){
-      const statistic = await this.getMyStatistic(player.user_id)
-      usersStatistic.push(statistic)
+    const usersStatistic: UserTopViewModel[] = []
+    const players = await this.userQueryRepository.getUsersRelatedToGames()
+    for(const player of players){
+      const statistic = await this.getMyStatistic(player.id)
+      usersStatistic.push({...statistic, player: {id: player.id, login: player.login}})
     }
     const sortedStatistic = this.sortStatistic(usersStatistic, query.sort)
-    const result = Paginator.createPaginationResult(uniquePlayerIds.length, query, sortedStatistic)
+    const startIndex = (query.pageNumber - 1) * query.pageSize
+    const endIndex = startIndex + query.pageSize
+    const pagedData = sortedStatistic.slice(startIndex, endIndex)
+    const result = Paginator.createPaginationResult(players.length, query, pagedData)
     return result
   }
 
@@ -219,23 +223,18 @@ export class QuizGamesQueryRepository {
     return mappedAnswers
   }
 
-  private sortStatistic(statistic: StatisticViewModel[], sortCriteria: string | string[]): StatisticViewModel[] {
-    if (typeof sortCriteria === 'string') {
-      sortCriteria = [sortCriteria];
-    }
-  
+  private sortStatistic(statistic: UserTopViewModel[],sortCriteria: string | string[]) {
     return statistic.sort((a, b) => {
       for (const criteria of sortCriteria) {
-        const [key, order] = criteria.split(' ')
-        const aValue = a[key]
-        const bValue = b[key]
-  
-        const comparison = typeof aValue === 'string'
-          ? aValue.localeCompare(bValue)
-          : aValue - bValue
-  
-        if (comparison !== 0) {
-          return order.toLowerCase() === 'desc' ? -comparison : comparison
+        const [field, order] = criteria.split(' ')
+    
+        const aValue = a[field];
+        const bValue = b[field];
+    
+        if (aValue < bValue) {
+          return order === 'desc' ? 1 : -1
+        } else if (aValue > bValue) {
+          return order === 'desc' ? -1 : 1
         }
       }
       return 0

@@ -16,14 +16,14 @@ export class UserQueryRepository {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>, @InjectDataSource() protected dataSource: DataSource,
   @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>){}
 
-  async getUsersRelatedToGames() {
+  async getUsersRelatedToGames(): Promise<UserEntity[]> {
     const userIds = await this.userRepository
       .createQueryBuilder('user')
       .distinct(true)
       .innerJoin(QuizGameEntity, 'quizGame', 'user.id = quizGame.playerOneId OR user.id = quizGame.playerTwoId')
       .where('quizGame.playerTwoId IS NOT NULL')
-      .select('user.id')
-      .getRawMany()
+      .select()
+      .getMany()
     
     return userIds
   }
