@@ -223,18 +223,23 @@ export class QuizGamesQueryRepository {
     return mappedAnswers
   }
 
-  private sortStatistic(statistic: UserTopViewModel[],sortCriteria: string | string[]) {
+  private sortStatistic(statistic: UserTopViewModel[], sortCriteria: string | string[]): UserTopViewModel[] {
+    if (typeof sortCriteria === 'string') {
+      sortCriteria = [sortCriteria];
+    }
+  
     return statistic.sort((a, b) => {
       for (const criteria of sortCriteria) {
-        const [field, order] = criteria.split(' ')
-    
-        const aValue = a[field];
-        const bValue = b[field];
-    
-        if (aValue < bValue) {
-          return order === 'desc' ? 1 : -1
-        } else if (aValue > bValue) {
-          return order === 'desc' ? -1 : 1
+        const [key, order] = criteria.split(' ')
+        const aValue = a[key]
+        const bValue = b[key]
+  
+        const comparison = typeof aValue === 'string'
+          ? aValue.localeCompare(bValue)
+          : aValue - bValue
+  
+        if (comparison !== 0) {
+          return order.toLowerCase() === 'desc' ? -comparison : comparison
         }
       }
       return 0
