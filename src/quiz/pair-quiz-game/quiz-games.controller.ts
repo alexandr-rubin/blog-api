@@ -9,6 +9,7 @@ import { QueryParamsModel } from "../../models/PaginationQuery";
 import { CommandBus } from "@nestjs/cqrs";
 import { AnswerCurrentGameQuestionCommand } from "./use-cases/answer-current-game-question-use-case";
 import { CreateOrConnectToTheGameCommand } from "./use-cases/create-or-connect-to-the-game-use-case";
+import { Public } from "../../decorators/public.decorator";
 
 @UseGuards(JwtAuthGuard)
 @Controller('pair-game-quiz')
@@ -45,5 +46,11 @@ export class QuizGamesController {
   @Get('users/my-statistic')
   async getMyStatistic(@Req() req: AccessTokenVrifyModel) {
     return await this.quizGamesQueryRepository.getMyStatistic(req.user.userId)
+  }
+
+  @Public()
+  @Get('users/top')
+  async getUsersTop(@Query() params: QueryParamsModel) {
+    return await this.quizGamesQueryRepository.getUsersTop(params)
   }
 }

@@ -4,6 +4,7 @@ export class QueryParamsModel {
   searchLoginTerm?: string
   searchEmailTerm?: string
   bodySearchTerm?: string
+  sort?: string | string[]
   publishedStatus!: string
   sortBy!: string
   sortDirection!: "asc" | "desc"

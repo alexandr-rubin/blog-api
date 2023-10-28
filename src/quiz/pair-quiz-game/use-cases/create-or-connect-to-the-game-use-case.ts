@@ -23,7 +23,7 @@ export class CreateOrConnectToTheGameUseCase implements ICommandHandler<CreateOr
     if(userActiveGame){
       throw new ForbiddenException('User already have active game.')
     }
-    // вынести pending в отдельный метод
+    
     const pendingGame = await this.quizGamesQueryRepository.findPendingSecondPlayerGame()
     if(pendingGame){
       return await this.pendingGame(pendingGame, (command.userId))

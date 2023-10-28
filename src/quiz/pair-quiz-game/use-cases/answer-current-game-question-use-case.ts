@@ -43,7 +43,9 @@ export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerC
 
     await this.increaseScore(createdAnswer.answerStatus, currentGame, command.userId, isFirstPlayer)
 
-    await this.addExtraPointAndEndGame(currentGame, isFirstPlayer, newQuestionIndex)
+    if(newQuestionIndex === 4 && (currentGame.firstPlayerProgress.answers.length === 5  || currentGame.secondPlayerProgress.answers.length === 5)){
+      await this.addExtraPointAndEndGame(currentGame, isFirstPlayer)
+    }
 
     return {questionId: questionId, answerStatus: createdAnswer.answerStatus, addedAt: createdAnswer.addedAt}
   }
@@ -55,16 +57,14 @@ export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerC
     return newAnswer
   }
 
-  private async addExtraPointAndEndGame(currentGame: GamePairViewModel, isFirstPlayer: boolean, newQuestionIndex: number){
-    if(newQuestionIndex === 4 && (currentGame.firstPlayerProgress.answers.length === 5  || currentGame.secondPlayerProgress.answers.length === 5)){
-      if (isFirstPlayer && currentGame.secondPlayerProgress.score > 0) {
-        await this.quizGamesRepository.increaseSecondPlayerScore(currentGame.id)
-      }
-      else if(currentGame.firstPlayerProgress.score > 0){
-        await this.quizGamesRepository.increasefirstPlayerScore(currentGame.id)
-      }
-      await this.quizGamesRepository.endGame(currentGame.id, new Date().toISOString(), GameStatuses.Finished)
+  private async addExtraPointAndEndGame(currentGame: GamePairViewModel, isFirstPlayer: boolean){
+    if (isFirstPlayer && currentGame.secondPlayerProgress.score > 0) {
+      await this.quizGamesRepository.increaseSecondPlayerScore(currentGame.id)
     }
+    else if(currentGame.firstPlayerProgress.score > 0){
+      await this.quizGamesRepository.increasefirstPlayerScore(currentGame.id)
+    }
+    await this.quizGamesRepository.endGame(currentGame.id, new Date().toISOString(), GameStatuses.Finished)
   }
 
   private async increaseScore(answerStatus: AnswerStatuses, currentGame: GamePairViewModel, userId: string, isFirstPlayer: boolean): Promise<UpdateResult> {

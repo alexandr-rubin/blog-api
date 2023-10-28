@@ -1260,6 +1260,17 @@ window.onload = function() {
             }
           }
         }
+      },
+      "/pair-game-quiz/users/top": {
+        "get": {
+          "operationId": "QuizGamesController_getUsersTop",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": ""
+            }
+          }
+        }
       }
     },
     "info": {

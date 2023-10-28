@@ -8,8 +8,6 @@ import { UserQueryRepository } from "../../users/user.query-repository";
 import { QuizAnswersEntity } from "./entities/quiz-answers.entity";
 import { AnswerViewModel } from "./models/view/Answer";
 import { AllGameAnswersViewModel } from "./models/view/AllGameAnswers";
-import { AllGameScoreViewModel } from "./models/view/GameScore";
-import { AnswerStatuses } from "../../helpers/answerStatuses";
 import { StatisticViewModel } from "./models/view/Statistic";
 import { Paginator } from "../../models/Paginator";
 import { QueryParamsModel } from "../../models/PaginationQuery";
@@ -21,6 +19,19 @@ export class QuizGamesQueryRepository {
   private readonly userQueryRepository: UserQueryRepository, 
   @InjectRepository(QuizAnswersEntity) private readonly quizAnswersRepository: Repository<QuizAnswersEntity>){}
   
+  async getUsersTop(params: QueryParamsModel)/*: Promise<Paginator<StatisticViewModel>>*/ {
+    const query = createPaginationQuery(params)
+    const usersStatistic = []
+    const uniquePlayerIds = await this.userQueryRepository.getUsersRelatedToGames()
+    for(const player of uniquePlayerIds){
+      const statistic = await this.getMyStatistic(player.user_id)
+      usersStatistic.push(statistic)
+    }
+    const sortedStatistic = this.sortStatistic(usersStatistic, query.sort)
+    const result = Paginator.createPaginationResult(uniquePlayerIds.length, query, sortedStatistic)
+    return result
+  }
+
   async findPendingSecondPlayerGame(): Promise<QuizGameEntity | null> {
     return await this.quizGamesRepository.findOneBy({status: GameStatuses.PendingSecondPlayer})
   }
@@ -180,35 +191,6 @@ export class QuizGamesQueryRepository {
     return game
   }
 
-  private countScoreForGameByAnswers(answers: AllGameAnswersViewModel): AllGameScoreViewModel{
-    let firstPlayerCorrectAnswersCount = this.countCorrectAnswers(answers.firstPlayerAnswers)
-    let secondPlayerCorrectAnswersCount = this.countCorrectAnswers(answers.secondPlayerAnswers)
-
-    if(answers.firstPlayerAnswers.length === 5 && answers.secondPlayerAnswers.length === 5){
-      const firstPlayerFinishedFirst = answers.firstPlayerAnswers[answers.firstPlayerAnswers.length - 1].addedAt < answers.secondPlayerAnswers[answers.secondPlayerAnswers.length - 1].addedAt;
-
-      if (firstPlayerFinishedFirst && firstPlayerCorrectAnswersCount > 0) {
-        firstPlayerCorrectAnswersCount++
-      }
-      else if(!firstPlayerFinishedFirst && secondPlayerCorrectAnswersCount > 0){
-        secondPlayerCorrectAnswersCount++
-      }
-    }
-
-    return {firstPlayerScore: firstPlayerCorrectAnswersCount, secondPlayerScore: secondPlayerCorrectAnswersCount}
-  }
-
-  private countCorrectAnswers(answers: AnswerViewModel[]) {
-    let count = 0
-    for(const answer of answers){
-      if(answer.answerStatus === AnswerStatuses.Correct){
-        count++
-      }
-    }
-
-    return count
-  }
-
   private async getAnswersForGame(game: QuizGameEntity, player1Id: string, player2Id: string): Promise<AllGameAnswersViewModel> {
     const firstPlayerAnswers = await this.quizAnswersRepository.findBy({gameId: game.id, userId: player1Id})
     const secondPlayerAnswers = await this.quizAnswersRepository.findBy({gameId: game.id, userId: player2Id})
@@ -235,5 +217,28 @@ export class QuizGamesQueryRepository {
     })
 
     return mappedAnswers
+  }
+
+  private sortStatistic(statistic: StatisticViewModel[], sortCriteria: string | string[]): StatisticViewModel[] {
+    if (typeof sortCriteria === 'string') {
+      sortCriteria = [sortCriteria];
+    }
+  
+    return statistic.sort((a, b) => {
+      for (const criteria of sortCriteria) {
+        const [key, order] = criteria.split(' ')
+        const aValue = a[key]
+        const bValue = b[key]
+  
+        const comparison = typeof aValue === 'string'
+          ? aValue.localeCompare(bValue)
+          : aValue - bValue
+  
+        if (comparison !== 0) {
+          return order.toLowerCase() === 'desc' ? -comparison : comparison
+        }
+      }
+      return 0
+    })
   }
 }
