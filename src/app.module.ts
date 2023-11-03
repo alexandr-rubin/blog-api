@@ -153,7 +153,7 @@ import { CreateOrConnectToTheGameUseCase } from './quiz/pair-quiz-game/use-cases
     //   type: 'postgres',
     //   host: 'localhost',
     //   port: 5432,
-    //   username: 'admin',
+    //   username: 'postgres',
     //   password: 'admin',
     //   database: 'incubatorTypeormAuto',
     //   autoLoadEntities: true,

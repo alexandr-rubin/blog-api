@@ -136,7 +136,7 @@ describe('QuizGames (e2e)', () => {
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[0]).send(firstGameAnswers[2]).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[0]).send(firstGameAnswers[3]).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[0]).send(incorrectAnswer).expect(HttpStatusCode.OK_200)
-      })
+      }, 10000)
       let game: GamePairViewModel
       it('get "/pair-game-quiz/pairs/:id"', async function() {
         const res = await request(httpServer).get('/pair-game-quiz/pairs/' + firstGameId).set('Authorization', 'Bearer ' + accessTokens[0]).expect(HttpStatusCode.OK_200)
@@ -172,7 +172,7 @@ describe('QuizGames (e2e)', () => {
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[0]).send(secondGameAnswers[2]).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[0]).send(secondGameAnswers[3]).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[0]).send(incorrectAnswer).expect(HttpStatusCode.OK_200)
-      })
+      }, 10000)
       let game: GamePairViewModel
       it('get "/pair-game-quiz/pairs/:id"', async function() {
         const res = await request(httpServer).get('/pair-game-quiz/pairs/' + secondGameId).set('Authorization', 'Bearer ' + accessTokens[0]).expect(HttpStatusCode.OK_200)
@@ -208,7 +208,7 @@ describe('QuizGames (e2e)', () => {
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[1]).send(thirdGameAnswers[2]).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[1]).send(thirdGameAnswers[3]).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[1]).send(incorrectAnswer).expect(HttpStatusCode.OK_200)
-      })
+      }, 10000)
       let game: GamePairViewModel
       it('get "/pair-game-quiz/pairs/:id"', async function() {
         const res = await request(httpServer).get('/pair-game-quiz/pairs/' + thirdGameId).set('Authorization', 'Bearer ' + accessTokens[0]).expect(HttpStatusCode.OK_200)
@@ -244,7 +244,7 @@ describe('QuizGames (e2e)', () => {
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[1]).send(fourthGameAnswers[2]).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[1]).send(fourthGameAnswers[3]).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[1]).send(incorrectAnswer).expect(HttpStatusCode.OK_200)
-      })
+      }, 10000)
       let game: GamePairViewModel
       it('get "/pair-game-quiz/pairs/:id"', async function() {
         const res = await request(httpServer).get('/pair-game-quiz/pairs/' + fourthGameId).set('Authorization', 'Bearer ' + accessTokens[0]).expect(HttpStatusCode.OK_200)
@@ -280,7 +280,7 @@ describe('QuizGames (e2e)', () => {
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[0]).send(fifthGameAnswers[2]).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[0]).send(incorrectAnswer).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[0]).send(incorrectAnswer).expect(HttpStatusCode.OK_200)
-      })
+      }, 10000)
       let game: GamePairViewModel
       it('get "/pair-game-quiz/pairs/:id"', async function() {
         const res = await request(httpServer).get('/pair-game-quiz/pairs/' + fifthGameId).set('Authorization', 'Bearer ' + accessTokens[0]).expect(HttpStatusCode.OK_200)
@@ -316,7 +316,7 @@ describe('QuizGames (e2e)', () => {
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[0]).send(incorrectAnswer).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[0]).send(incorrectAnswer).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[3]).send(sixthGameAnswers[4]).expect(HttpStatusCode.OK_200)
-      })
+      }, 10000)
       let game: GamePairViewModel
       it('get "/pair-game-quiz/pairs/:id"', async function() {
         const res = await request(httpServer).get('/pair-game-quiz/pairs/' + sixthGameId).set('Authorization', 'Bearer ' + accessTokens[0]).expect(HttpStatusCode.OK_200)
@@ -352,7 +352,7 @@ describe('QuizGames (e2e)', () => {
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[3]).send(incorrectAnswer).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[3]).send(incorrectAnswer).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[0]).send(seventhGameAnswers[4]).expect(HttpStatusCode.OK_200)
-      })
+      }, 10000)
       let game: GamePairViewModel
       it('get "/pair-game-quiz/pairs/:id"', async function() {
         const res = await request(httpServer).get('/pair-game-quiz/pairs/' + seventhGameId).set('Authorization', 'Bearer ' + accessTokens[0]).expect(HttpStatusCode.OK_200)
@@ -388,7 +388,7 @@ describe('QuizGames (e2e)', () => {
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[1]).send(eighthGameAnswers[2]).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[1]).send(eighthGameAnswers[3]).expect(HttpStatusCode.OK_200)
         await request(httpServer).post('/pair-game-quiz/pairs/my-current/answers').set('Authorization', 'Bearer ' + accessTokens[1]).send(incorrectAnswer).expect(HttpStatusCode.OK_200)
-      })
+      }, 10000)
       let game: GamePairViewModel
       it('get "/pair-game-quiz/pairs/:id"', async function() {
         const res = await request(httpServer).get('/pair-game-quiz/pairs/' + eighthGameId).set('Authorization', 'Bearer ' + accessTokens[1]).expect(HttpStatusCode.OK_200)

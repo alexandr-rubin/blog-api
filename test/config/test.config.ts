@@ -6,7 +6,7 @@ export const getTestConfiguration = () => ({
       postgres: {
         host: 'localhost',
         port: 5432,
-        username: 'admin',
+        username: 'postgres',
         password: 'admin',
         database: 'incubatorTypeormAuto',
       },
