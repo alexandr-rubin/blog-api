@@ -18,6 +18,7 @@ import { publishQuestions } from './testHelpers/publishQuestions.helper';
 import { GameStatuses } from '../src/helpers/gameStatuses';
 import { incorrectAnswer } from './testHelpers/incorrectInputs';
 import { StatisticViewModel } from '../src/quiz/pair-quiz-game/models/view/Statistic';
+import { avgScoreDesc, pageSize3SumScoreDescAvgScoreDesc, removePlayersId } from './testHelpers/usersTopExpectedResults';
 
 describe('QuizGames (e2e)', () => {
   let app: INestApplication;
@@ -408,4 +409,21 @@ describe('QuizGames (e2e)', () => {
       })
     })
   })
+
+  // todo: add id validation
+  describe('Get top users', () => {
+    it('get top users pageSize=3&sort=sumScore desc&sort=avgScores desc', async function() {
+      const res = await request(httpServer).get('/pair-game-quiz/users/top?pageSize=3&sort=sumScore desc&sort=avgScores desc').expect(HttpStatusCode.OK_200)
+      expect(removePlayersId(res.body.items)).toEqual(removePlayersId(pageSize3SumScoreDescAvgScoreDesc))
+      expect(res.body.items.length).toEqual(3)
+      expect(res.body.totalCount).toEqual(4)
+    })
+    it('get top users avgScores desc', async function() {
+      const res = await request(httpServer).get('/pair-game-quiz/users/top?sort=avgScores desc').expect(HttpStatusCode.OK_200)
+      expect(removePlayersId(res.body.items)).toEqual(removePlayersId(avgScoreDesc))
+      expect(res.body.items.length).toEqual(4)
+      expect(res.body.totalCount).toEqual(4)
+    })
+  })
 })
+

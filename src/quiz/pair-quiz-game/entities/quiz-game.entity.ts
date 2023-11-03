@@ -1,6 +1,6 @@
 import { GameStatuses } from "../../../helpers/gameStatuses"
 import { UserEntity } from "../../../users/entities/user.entity"
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
 import { QuestionViewModel } from "../models/view/Questions"
 
 @Entity('QuizGames')
@@ -9,14 +9,12 @@ export class QuizGameEntity {
   id: string;
 
   @ManyToOne(() => UserEntity)
-  @JoinColumn()
   playerOne: UserEntity;
 
   @Column({ type: 'uuid' })
   playerOneId: string;
 
   @ManyToOne(() => UserEntity, { nullable: true })
-  @JoinColumn()
   playerTwo: UserEntity;
 
   @Column({ type: 'uuid', nullable: true })
