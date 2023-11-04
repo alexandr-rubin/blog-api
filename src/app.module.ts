@@ -88,6 +88,7 @@ import { QuizAnswersEntity } from './quiz/pair-quiz-game/entities/quiz-answers.e
 import { AnswerCurrentGameQuestionUseCase } from './quiz/pair-quiz-game/use-cases/answer-current-game-question-use-case';
 import { CreateOrConnectToTheGameUseCase } from './quiz/pair-quiz-game/use-cases/create-or-connect-to-the-game-use-case';
 import { ScheduleModule } from '@nestjs/schedule';
+import { GameTimestampsEntity } from './quiz/pair-quiz-game/entities/game-last-answer-timestamp';
 
 @Module({
   imports: [
@@ -174,7 +175,8 @@ import { ScheduleModule } from '@nestjs/schedule';
       CommentLikesAndDislikesEntity,
       QuizQuestionEntity,
       QuizGameEntity,
-      QuizAnswersEntity
+      QuizAnswersEntity,
+      GameTimestampsEntity
     ]),
 
     MongooseModule.forRootAsync({

@@ -8,9 +8,10 @@ import { AnswerStatuses } from "../../../helpers/answerStatuses";
 import { ForbiddenException } from "@nestjs/common";
 import { GameStatuses } from "../../../helpers/gameStatuses";
 import { AnswerViewModel } from "../models/view/Answer";
-import { UpdateResult } from "typeorm";
-import { SchedulerRegistry } from "@nestjs/schedule";
-import { CronJob } from "cron"
+import { DataSource, UpdateResult } from "typeorm";
+import { Cron, SchedulerRegistry } from "@nestjs/schedule";
+import { GameTimestampsEntity } from "../entities/game-last-answer-timestamp";
+import { TimestampInputModel } from "../models/input/Timestamp";
 
 export class AnswerCurrentGameQuestionCommand {
   constructor(public answer: string, public userId: string) {}
@@ -19,7 +20,7 @@ export class AnswerCurrentGameQuestionCommand {
 @CommandHandler(AnswerCurrentGameQuestionCommand)
 export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerCurrentGameQuestionCommand> {
   constructor(private readonly quizGamesRepository: QuizGamesRepository, private readonly quizGamesQueryRepository: QuizGamesQueryRepository,
-    private readonly quizQuestionsQueryRepository: QuizQuestionsQueryRepository, private schedulerRegistry: SchedulerRegistry){}
+    private readonly quizQuestionsQueryRepository: QuizQuestionsQueryRepository, private schedulerRegistry: SchedulerRegistry, private dataSource: DataSource){}
   async execute(command: AnswerCurrentGameQuestionCommand): Promise<AnswerViewModel> {
     let currentGame: GamePairViewModel
     try {
@@ -53,31 +54,21 @@ export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerC
     }
 
     if(newQuestionIndex === 4 && !atLeastOnePlayerAllQuestionsAnswered){
-      setTimeout(async () => {
-        const game = await this.quizGamesQueryRepository.getGameByIdNoView(currentGame.id)
-        if(game && game.status !== GameStatuses.Finished){
-          await this.addExtraPoint(currentGame, !isFirstPlayer)
-          await this.quizGamesRepository.endGame(currentGame.id, new Date().toISOString(), GameStatuses.Finished);
-        }
-      }, 10000);
+      const timestamp: TimestampInputModel = { gameId: currentGame.id, isActive: true, createdAt: new Date().toISOString() }
+      await this.quizGamesRepository.createTimestamp(timestamp)
     }
 
     return {questionId: questionId, answerStatus: createdAnswer.answerStatus, addedAt: createdAnswer.addedAt}
   }
 
-  private createEndGameCron(currentGame: GamePairViewModel, isFirstPlayer: boolean) {
-    const cronTime = '*/10 * * * * *'
-    const job = new CronJob(cronTime, async () => {
-      await this.addExtraPoint(currentGame, !isFirstPlayer)
-      await this.quizGamesRepository.endGame(currentGame.id, new Date().toISOString(), GameStatuses.Finished)
-    })
-    this.schedulerRegistry.addCronJob(currentGame.id, job)
-    job.start()
-  }
-
-  private stopCronJob(gameId: string) {
-    const job = this.schedulerRegistry.getCronJob(gameId)
-    job.stop()
+  @Cron('*/10 * * * * *')
+  private async endExpiredGames(){
+    const expiredTimestamps: GameTimestampsEntity[] | null = await this.quizGamesQueryRepository.findExpiredTimestamps()
+    for(const expiredTimestamp of expiredTimestamps){
+      // Add extra points
+      await this.quizGamesRepository.endGame(expiredTimestamp.gameId, new Date().toISOString(), GameStatuses.Finished)
+      await this.quizGamesRepository.deactivateTimestamp(expiredTimestamp.id)
+    }
   }
 
   private async createNewAnswerInputModel(gameId: string, answer: string, userId: string, questionId: string): Promise<CreateAnswerInputModel> {

@@ -13,12 +13,14 @@ import { Paginator } from "../../models/Paginator";
 import { QueryParamsModel } from "../../models/PaginationQuery";
 import { createPaginationQuery } from "../../helpers/pagination";
 import { UserTopViewModel } from "./models/view/userTop";
+import { GameTimestampsEntity } from "./entities/game-last-answer-timestamp";
 
 @Injectable()
 export class QuizGamesQueryRepository {
   constructor(@InjectRepository(QuizGameEntity) private readonly quizGamesRepository: Repository<QuizGameEntity>,
   private readonly userQueryRepository: UserQueryRepository, 
-  @InjectRepository(QuizAnswersEntity) private readonly quizAnswersRepository: Repository<QuizAnswersEntity>){}
+  @InjectRepository(QuizAnswersEntity) private readonly quizAnswersRepository: Repository<QuizAnswersEntity>,
+  @InjectRepository(GameTimestampsEntity) private readonly gameTimestampsRepository: Repository<GameTimestampsEntity>){}
   
   async getUsersTop(params: QueryParamsModel): Promise<Paginator<UserTopViewModel>> {
     const query = createPaginationQuery(params)
@@ -38,6 +40,14 @@ export class QuizGamesQueryRepository {
 
   async findPendingSecondPlayerGame(): Promise<QuizGameEntity | null> {
     return await this.quizGamesRepository.findOneBy({status: GameStatuses.PendingSecondPlayer})
+  }
+
+  async findExpiredTimestamps(): Promise<GameTimestampsEntity[] | null> {
+    const games = await this.gameTimestampsRepository.findBy({isActive: true})
+    if(!games){
+      return null
+    }
+    return games
   }
 
   async findActiveGameForUser(userId: string): Promise<QuizGameEntity | null> {

@@ -9,6 +9,11 @@ export class QuizGamesService {
     return await this.quizGamesRepository.deleteGamesTesting()
   }
 
+  async deleteTimestampsTesting(): Promise<boolean> {
+    await this.quizGamesRepository.deleteTimestampsTesting()
+    return true
+  }
+
   async deleteAnswersTesting(): Promise<boolean> {
     return await this.quizGamesRepository.deleteAnswersTesting()
   }

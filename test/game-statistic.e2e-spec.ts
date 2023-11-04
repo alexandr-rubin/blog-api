@@ -26,7 +26,7 @@ describe('QuizGames (e2e)', () => {
   let dataSource: DataSource
   let basicAuthCredentials
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).overrideProvider(ConfigService)

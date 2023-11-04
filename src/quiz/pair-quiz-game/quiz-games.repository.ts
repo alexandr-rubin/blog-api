@@ -6,11 +6,14 @@ import { CreateQuizGameInputModel } from "./models/input/CreateGame";
 import { CreateAnswerInputModel } from "./models/input/CreateAnswer";
 import { QuizAnswersEntity } from "./entities/quiz-answers.entity";
 import { GameStatuses } from "../../helpers/gameStatuses";
+import { GameTimestampsEntity } from "./entities/game-last-answer-timestamp";
+import { TimestampInputModel } from "./models/input/Timestamp";
 
 @Injectable()
 export class QuizGamesRepository {
   constructor(@InjectRepository(QuizGameEntity) private readonly quizGamesRepository: Repository<QuizGameEntity>,
-  @InjectRepository(QuizAnswersEntity) private readonly quizAnswersRepository: Repository<QuizAnswersEntity>){}
+  @InjectRepository(QuizAnswersEntity) private readonly quizAnswersRepository: Repository<QuizAnswersEntity>,
+  @InjectRepository(GameTimestampsEntity) private readonly gameTimestampsRepository: Repository<GameTimestampsEntity>){}
 
   async createGame(newGame: CreateQuizGameInputModel) {
     return await this.quizGamesRepository.save(newGame)
@@ -50,8 +53,21 @@ export class QuizGamesRepository {
     return updateResult
   }
 
+  async createTimestamp(timestamp: TimestampInputModel) {
+    await this.gameTimestampsRepository.save(timestamp)
+  }
+
+  async deactivateTimestamp(id: string) {
+    await this.gameTimestampsRepository.update({id: id}, { isActive: false })
+  }
+
   async deleteGamesTesting(): Promise<boolean> {
     await this.quizGamesRepository.delete({})
+    return true
+  }
+
+  async deleteTimestampsTesting(): Promise<boolean> {
+    await this.gameTimestampsRepository.delete({})
     return true
   }
 
