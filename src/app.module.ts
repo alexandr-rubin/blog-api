@@ -87,6 +87,7 @@ import { QuizGameExistValidator } from './validation/GameExistValidator';
 import { QuizAnswersEntity } from './quiz/pair-quiz-game/entities/quiz-answers.entity';
 import { AnswerCurrentGameQuestionUseCase } from './quiz/pair-quiz-game/use-cases/answer-current-game-question-use-case';
 import { CreateOrConnectToTheGameUseCase } from './quiz/pair-quiz-game/use-cases/create-or-connect-to-the-game-use-case';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -133,6 +134,8 @@ import { CreateOrConnectToTheGameUseCase } from './quiz/pair-quiz-game/use-cases
       secret: process.env.JWT_SECRET_KEY,
       signOptions: { expiresIn: '10m' },
     }),
+
+    ScheduleModule.forRoot(),
 
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

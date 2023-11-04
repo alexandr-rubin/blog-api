@@ -9,6 +9,9 @@ import { ForbiddenException } from "@nestjs/common";
 import { GameStatuses } from "../../../helpers/gameStatuses";
 import { AnswerViewModel } from "../models/view/Answer";
 import { UpdateResult } from "typeorm";
+import { SchedulerRegistry } from "@nestjs/schedule";
+import { CronJob } from "cron"
+import { CronJobNames } from "../../../helpers/cronJobNames";
 
 export class AnswerCurrentGameQuestionCommand {
   constructor(public answer: string, public userId: string) {}
@@ -17,7 +20,7 @@ export class AnswerCurrentGameQuestionCommand {
 @CommandHandler(AnswerCurrentGameQuestionCommand)
 export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerCurrentGameQuestionCommand> {
   constructor(private readonly quizGamesRepository: QuizGamesRepository, private readonly quizGamesQueryRepository: QuizGamesQueryRepository,
-    private readonly quizQuestionsQueryRepository: QuizQuestionsQueryRepository){}
+    private readonly quizQuestionsQueryRepository: QuizQuestionsQueryRepository, private schedulerRegistry: SchedulerRegistry){}
   async execute(command: AnswerCurrentGameQuestionCommand): Promise<AnswerViewModel> {
     let currentGame: GamePairViewModel
     try {
@@ -34,6 +37,8 @@ export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerC
       throw new ForbiddenException('You can\'t answer this question.')
     }
 
+    const atLeastOnePlayerAllQuestionsAnswered = currentGame.firstPlayerProgress.answers.length === 5  || currentGame.secondPlayerProgress.answers.length === 5
+
     const newQuestionIndex = currentPlayerProgress.answers.length
     const questionId = currentGame.questions[newQuestionIndex].id
 
@@ -43,11 +48,30 @@ export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerC
 
     await this.increaseScore(createdAnswer.answerStatus, currentGame, command.userId, isFirstPlayer)
 
-    if(newQuestionIndex === 4 && (currentGame.firstPlayerProgress.answers.length === 5  || currentGame.secondPlayerProgress.answers.length === 5)){
+    if(newQuestionIndex === 4 && !atLeastOnePlayerAllQuestionsAnswered){
+      this.createEndGameCron(CronJobNames.EndGame, currentGame, isFirstPlayer)
+    }
+
+    if(newQuestionIndex === 4 && atLeastOnePlayerAllQuestionsAnswered){
+      this.stopCronJob(CronJobNames.EndGame)
       await this.addExtraPointAndEndGame(currentGame, isFirstPlayer)
     }
 
     return {questionId: questionId, answerStatus: createdAnswer.answerStatus, addedAt: createdAnswer.addedAt}
+  }
+
+  private createEndGameCron(name: string, currentGame: GamePairViewModel, isFirstPlayer: boolean) {
+    const cronTime = '*/10 * * * * *'
+    const job = new CronJob(cronTime, () => {
+      this.addExtraPointAndEndGame(currentGame, isFirstPlayer)
+    })
+    this.schedulerRegistry.addCronJob(name, job)
+    job.start()
+  }
+
+  private stopCronJob(name: string) {
+    const job = this.schedulerRegistry.getCronJob(name)
+    job.stop()
   }
 
   private async createNewAnswerInputModel(gameId: string, answer: string, userId: string, questionId: string): Promise<CreateAnswerInputModel> {
@@ -75,4 +99,6 @@ export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerC
       return await this.quizGamesRepository.increaseSecondPlayerScore(currentGame.id)
     }
   } 
+
+  
 }
