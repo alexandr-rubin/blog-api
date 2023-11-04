@@ -145,7 +145,7 @@ describe('QuizGames cron (e2e)', () => {
       })
       it('firstPlayer should win, scores: 3 - 1. finishGameDate should be a strin. status shoulb be "Finished"', async function() {
         expect(game.status).toEqual(GameStatuses.Finished)
-        expect(game.firstPlayerProgress.score).toEqual(3)
+        expect(game.firstPlayerProgress.score).toEqual(4)
         expect(game.secondPlayerProgress.score).toEqual(1)
         expect(game.finishGameDate).toEqual(expect.any(String))
       })

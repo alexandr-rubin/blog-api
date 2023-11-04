@@ -20,4 +20,7 @@ export class GameTimestampsEntity {
 
   @Column()
   createdAt: string
+
+  @Column()
+  isFirstPlayerEndFirst: boolean
 }

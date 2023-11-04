@@ -49,12 +49,12 @@ export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerC
     await this.increaseScore(createdAnswer.answerStatus, currentGame, command.userId, isFirstPlayer)
 
     if(newQuestionIndex === 4 && atLeastOnePlayerAllQuestionsAnswered){
-      await this.addExtraPoint(currentGame, isFirstPlayer)
+      await this.addExtraPoint(currentGame.id, currentGame.firstPlayerProgress.score, currentGame.secondPlayerProgress.score, isFirstPlayer)
       await this.quizGamesRepository.endGame(currentGame.id, new Date().toISOString(), GameStatuses.Finished)
     }
 
     if(newQuestionIndex === 4 && !atLeastOnePlayerAllQuestionsAnswered){
-      const timestamp: TimestampInputModel = { gameId: currentGame.id, isActive: true, createdAt: new Date().toISOString() }
+      const timestamp: TimestampInputModel = { gameId: currentGame.id, isActive: true, createdAt: new Date().toISOString(), isFirstPlayerEndFirst: !isFirstPlayer }
       await this.quizGamesRepository.createTimestamp(timestamp)
     }
 
@@ -66,6 +66,8 @@ export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerC
     const expiredTimestamps: GameTimestampsEntity[] | null = await this.quizGamesQueryRepository.findExpiredTimestamps()
     for(const expiredTimestamp of expiredTimestamps){
       // Add extra points
+      const game = await this.quizGamesQueryRepository.getGameByIdNoView(expiredTimestamp.gameId)
+      await this.addExtraPoint(game.id, game.firstPlayerScore, game.secondPlayerScore, expiredTimestamp.isFirstPlayerEndFirst)
       await this.quizGamesRepository.endGame(expiredTimestamp.gameId, new Date().toISOString(), GameStatuses.Finished)
       await this.quizGamesRepository.deactivateTimestamp(expiredTimestamp.id)
     }
@@ -78,12 +80,12 @@ export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerC
     return newAnswer
   }
 
-  private async addExtraPoint(currentGame: GamePairViewModel, isFirstPlayer: boolean){
-    if (isFirstPlayer && currentGame.secondPlayerProgress.score > 0) {
-      await this.quizGamesRepository.increaseSecondPlayerScore(currentGame.id)
+  private async addExtraPoint(gameId: string, firstPlayerScore: number, secondPlayerScore: number , isFirstPlayer: boolean){
+    if (isFirstPlayer && secondPlayerScore > 0) {
+      await this.quizGamesRepository.increaseSecondPlayerScore(gameId)
     }
-    else if(currentGame.firstPlayerProgress.score > 0){
-      await this.quizGamesRepository.increasefirstPlayerScore(currentGame.id)
+    else if(firstPlayerScore > 0){
+      await this.quizGamesRepository.increasefirstPlayerScore(gameId)
     }
   }
 
