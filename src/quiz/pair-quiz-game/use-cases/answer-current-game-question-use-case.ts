@@ -48,29 +48,33 @@ export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerC
 
     await this.increaseScore(createdAnswer.answerStatus, currentGame, command.userId, isFirstPlayer)
 
-    if(newQuestionIndex === 4 && !atLeastOnePlayerAllQuestionsAnswered){
-      this.createEndGameCron(CronJobNames.EndGame, currentGame, isFirstPlayer)
+    if(newQuestionIndex === 4 && atLeastOnePlayerAllQuestionsAnswered){
+      await this.addExtraPoint(currentGame, isFirstPlayer)
+      await this.quizGamesRepository.endGame(currentGame.id, new Date().toISOString(), GameStatuses.Finished)
     }
 
-    if(newQuestionIndex === 4 && atLeastOnePlayerAllQuestionsAnswered){
-      this.stopCronJob(CronJobNames.EndGame)
-      await this.addExtraPointAndEndGame(currentGame, isFirstPlayer)
+    if(newQuestionIndex === 4 && !atLeastOnePlayerAllQuestionsAnswered){
+      setTimeout(async () => {
+        await this.addExtraPoint(currentGame, !isFirstPlayer)
+        await this.quizGamesRepository.endGame(currentGame.id, new Date().toISOString(), GameStatuses.Finished);
+      }, 10000);
     }
 
     return {questionId: questionId, answerStatus: createdAnswer.answerStatus, addedAt: createdAnswer.addedAt}
   }
 
-  private createEndGameCron(name: string, currentGame: GamePairViewModel, isFirstPlayer: boolean) {
+  private createEndGameCron(currentGame: GamePairViewModel, isFirstPlayer: boolean) {
     const cronTime = '*/10 * * * * *'
-    const job = new CronJob(cronTime, () => {
-      this.addExtraPointAndEndGame(currentGame, isFirstPlayer)
+    const job = new CronJob(cronTime, async () => {
+      await this.addExtraPoint(currentGame, !isFirstPlayer)
+      await this.quizGamesRepository.endGame(currentGame.id, new Date().toISOString(), GameStatuses.Finished)
     })
-    this.schedulerRegistry.addCronJob(name, job)
+    this.schedulerRegistry.addCronJob(currentGame.id, job)
     job.start()
   }
 
-  private stopCronJob(name: string) {
-    const job = this.schedulerRegistry.getCronJob(name)
+  private stopCronJob(gameId: string) {
+    const job = this.schedulerRegistry.getCronJob(gameId)
     job.stop()
   }
 
@@ -81,14 +85,13 @@ export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerC
     return newAnswer
   }
 
-  private async addExtraPointAndEndGame(currentGame: GamePairViewModel, isFirstPlayer: boolean){
+  private async addExtraPoint(currentGame: GamePairViewModel, isFirstPlayer: boolean){
     if (isFirstPlayer && currentGame.secondPlayerProgress.score > 0) {
       await this.quizGamesRepository.increaseSecondPlayerScore(currentGame.id)
     }
     else if(currentGame.firstPlayerProgress.score > 0){
       await this.quizGamesRepository.increasefirstPlayerScore(currentGame.id)
     }
-    await this.quizGamesRepository.endGame(currentGame.id, new Date().toISOString(), GameStatuses.Finished)
   }
 
   private async increaseScore(answerStatus: AnswerStatuses, currentGame: GamePairViewModel, userId: string, isFirstPlayer: boolean): Promise<UpdateResult> {
