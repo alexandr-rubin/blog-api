@@ -11,7 +11,6 @@ import { AnswerViewModel } from "../models/view/Answer";
 import { UpdateResult } from "typeorm";
 import { SchedulerRegistry } from "@nestjs/schedule";
 import { CronJob } from "cron"
-import { CronJobNames } from "../../../helpers/cronJobNames";
 
 export class AnswerCurrentGameQuestionCommand {
   constructor(public answer: string, public userId: string) {}
@@ -55,8 +54,11 @@ export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerC
 
     if(newQuestionIndex === 4 && !atLeastOnePlayerAllQuestionsAnswered){
       setTimeout(async () => {
-        await this.addExtraPoint(currentGame, !isFirstPlayer)
-        await this.quizGamesRepository.endGame(currentGame.id, new Date().toISOString(), GameStatuses.Finished);
+        const game = await this.quizGamesQueryRepository.getGameByIdNoView(currentGame.id)
+        if(game && game.status !== GameStatuses.Finished){
+          await this.addExtraPoint(currentGame, !isFirstPlayer)
+          await this.quizGamesRepository.endGame(currentGame.id, new Date().toISOString(), GameStatuses.Finished);
+        }
       }, 10000);
     }
 

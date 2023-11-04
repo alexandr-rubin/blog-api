@@ -18,7 +18,6 @@ import { publishQuestions } from './testHelpers/publishQuestions.helper';
 import { GameStatuses } from '../src/helpers/gameStatuses';
 import { incorrectAnswer } from './testHelpers/incorrectInputs';
 import { StatisticViewModel } from '../src/quiz/pair-quiz-game/models/view/Statistic';
-import { avgScoreDesc, pageSize3SumScoreDescAvgScoreDesc, removePlayersId } from './testHelpers/usersTopExpectedResults';
 
 describe('QuizGames cron (e2e)', () => {
   let app: INestApplication;
