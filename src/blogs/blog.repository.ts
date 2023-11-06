@@ -56,9 +56,9 @@ export class BlogRepository {
     return !!result
   }
 
-  async banOrUnbanBlogById(blogId: string, isBanned: boolean, banDate: string): Promise<boolean> {
-    const result = await this.blogModel.findByIdAndUpdate(blogId, {banInfo: {isBanned: isBanned, banDate: banDate}})
-    return !!result
+  async banOrUnbanBlogById(blogId: string, isBanned: boolean, banDate: string): Promise<UpdateResult> {
+    const result = await this.blogRepository.update({id: blogId}, {banInfo: {isBanned: isBanned, banDate: banDate}})
+    return result
   }
 
   async banNewUserForBlog(newBannedUserInfo: BlogBannedUsers) {

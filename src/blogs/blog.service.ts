@@ -91,7 +91,7 @@ export class BlogService {
     return !!result
   }
 
-  async banOrUnbanBlogById(blogId: string, isBanned: boolean): Promise<boolean> {
+  async banOrUnbanBlogById(blogId: string, isBanned: boolean): Promise<UpdateResult> {
     const banDate = isBanned ? new Date().toISOString() : null
     return await this.blogRepository.banOrUnbanBlogById(blogId, isBanned, banDate)
   }

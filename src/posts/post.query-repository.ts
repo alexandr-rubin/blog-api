@@ -7,7 +7,7 @@ import { CommentViewModel } from "../comments/models/view/CommentViewModel";
 import { PostViewModel } from "./models/view/Post";
 import { PostLike } from "./models/schemas/Post";
 import { CommentLike } from "../comments/models/schemas/CommentLike";
-import { DataSource, Repository } from "typeorm";
+import { DataSource, In, Not, Repository } from "typeorm";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { SQLPostViewModel } from "./models/view/SQLPost";
 import { PostEntity } from "./entities/post.entity";
@@ -35,7 +35,9 @@ export class PostQueryRepository {
     const posts = await this.postRepository
     .createQueryBuilder('post')
     .select()
-    .where("post.blogId NOT IN (:...bannedBlogsIds)", { bannedBlogsIds: bannedBlogsIds })
+    .where({
+      blogId: Not(In(bannedBlogsIds))
+    })
     .orderBy(`post.${query.sortBy} COLLATE "C"`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
     .skip(skip)
     .take(query.pageSize)
@@ -49,11 +51,17 @@ export class PostQueryRepository {
   }
 
   async getPostgById(postId: string, userId: string, bannedUserIds: string[], bannedBlogsIds: string[]): Promise<PostViewModel | null> {
-    const post = await this.postRepository
-    .createQueryBuilder('post')
-    .select()
-    .where("post.id = :postId AND post.blogId NOT IN (:...bannedBlogsIds)", { postId: postId, bannedBlogsIds: bannedBlogsIds })
-    .getOne()
+    // const post = await this.postRepository
+    // .createQueryBuilder('post')
+    // .select()
+    // .where("post.id = :postId AND post.blogId NOT IN (:...bannedBlogsIds)", { postId: postId, bannedBlogsIds: bannedBlogsIds })
+    // .getOne()
+    const post = await this.postRepository.findOne({
+      where: {
+        id: postId,
+        blogId: Not(In(bannedBlogsIds))
+      }
+    })
 
     if(!post){
       throw new NotFoundException()
