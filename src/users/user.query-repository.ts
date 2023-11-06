@@ -150,8 +150,12 @@ export class UserQueryRepository {
   }
 
   async getBannedUsersId(): Promise<string[]> {
-    const bannedUsers = await this.userModel.find({'banInfo.isBanned': true}, '_id')
-    const bannedUserIds = bannedUsers.map(user => user._id.toString());
+    const bannedUsers = await this.userRepository
+    .createQueryBuilder('user')
+    .select(['user.id'])
+    .where('user.banInfo ->> \'isBanned\' = :isBanned', { isBanned: true })
+    .getMany()
+    const bannedUserIds = bannedUsers.map(user => user.id.toString())
     return bannedUserIds
   }
 }

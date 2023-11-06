@@ -35,6 +35,7 @@ export class PostQueryRepository {
     const posts = await this.postRepository
     .createQueryBuilder('post')
     .select()
+    .where("post.blogId NOT IN (:...bannedBlogsIds)", { bannedBlogsIds: bannedBlogsIds })
     .orderBy(`post.${query.sortBy} COLLATE "C"`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
     .skip(skip)
     .take(query.pageSize)
@@ -48,7 +49,12 @@ export class PostQueryRepository {
   }
 
   async getPostgById(postId: string, userId: string, bannedUserIds: string[], bannedBlogsIds: string[]): Promise<PostViewModel | null> {
-    const post = await this.postRepository.findOneBy({id: postId})
+    const post = await this.postRepository
+    .createQueryBuilder('post')
+    .select()
+    .where("post.id = :postId AND post.blogId NOT IN (:...bannedBlogsIds)", { postId: postId, bannedBlogsIds: bannedBlogsIds })
+    .getOne()
+
     if(!post){
       throw new NotFoundException()
     }
