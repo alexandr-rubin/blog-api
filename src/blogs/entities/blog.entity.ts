@@ -15,7 +15,7 @@ export class BlogEntity {
   createdAt: string
   @Column()
   isMembership!: boolean
-  @ManyToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity, {onDelete: 'CASCADE'})
   user: UserEntity
   @Column({ type: 'uuid', nullable: true })
   userId: string

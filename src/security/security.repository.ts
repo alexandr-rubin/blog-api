@@ -31,10 +31,13 @@ export class SecurityRepository {
     return await this.deviceRepository.update({ deviceId: deviceId }, { isValid: false })
   }
 
-  async terminateBannedUserSessions(userId: string): Promise<boolean> {
-    // const isTerminated = (await this.deviceModel.deleteMany({userId: userId})).acknowledged
-    // return isTerminated
-    return true
+  async terminateBannedUserSessions(userId: string): Promise<UpdateResult> {
+    const isTerminated = await this.deviceRepository.update(
+      { userId: userId},
+      { isValid: false }
+    )
+
+    return isTerminated
   }
 
   async addLog(logEntry: APILog): Promise<APILog> {

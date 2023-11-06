@@ -10,6 +10,7 @@ import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import { UserEntity } from "./entities/user.entity";
 import { QuizGameEntity } from "../quiz/pair-quiz-game/entities/quiz-game.entity";
+import { UserBanStatuses } from "../helpers/userBanStatuses";
 
 @Injectable()
 export class UserQueryRepository {
@@ -33,13 +34,13 @@ export class UserQueryRepository {
     const query = createPaginationQuery(params)
     const skip = (query.pageNumber - 1) * query.pageSize
     //
-    const search : any = {}
-    if(query.searchLoginTerm != null){
-      search.login = {$regex: query.searchLoginTerm, $options: 'i'}
-    }
-    if(query.searchEmailTerm != null){
-      search.email = {$regex: query.searchEmailTerm, $options: 'i'}
-    }
+    // const search : any = {}
+    // if(query.searchLoginTerm != null){
+    //   search.login = {$regex: query.searchLoginTerm, $options: 'i'}
+    // }
+    // if(query.searchEmailTerm != null){
+    //   search.email = {$regex: query.searchEmailTerm, $options: 'i'}
+    // }
     // if(query.banStatus != null && query.banStatus === "banned"){
     //   search["banInfo.isBanned"] = true
     // }
@@ -47,38 +48,41 @@ export class UserQueryRepository {
     //   search["banInfo.isBanned"] = false
     // }
 
-    const users = await this.userRepository
-    .createQueryBuilder('user')
-    .select(['user.id', 'user.login', 'user.email', 'user.createdAt'])
-    .where((qb) => {
+    const whereCondition = (qb) => {
       if (query.searchLoginTerm || query.searchEmailTerm) {
         qb.andWhere('(user.login ILIKE :searchLoginTerm OR user.email ILIKE :searchEmailTerm)', {
           searchLoginTerm: query.searchLoginTerm ? `%${query.searchLoginTerm}%` : '',
           searchEmailTerm: query.searchEmailTerm ? `%${query.searchEmailTerm}%` : '',
         });
       }
-    })
+      if (query.banStatus !== UserBanStatuses.All) {
+        qb.andWhere('user.banInfo ->> \'isBanned\' = :isBanned', {
+          isBanned: query.banStatus === UserBanStatuses.Banned ? true : false,
+        });
+      }
+    };
+
+    const users = await this.userRepository
+    .createQueryBuilder('user')
+    .select(['user.id', 'user.login', 'user.email', 'user.createdAt', 'user.banInfo'])
+    .where(whereCondition)
     .orderBy(`user.${query.sortBy} COLLATE "C"`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
     .skip(skip)
     .take(query.pageSize)
     .getMany()
 
-    const count = await this.countUsers(query)
+    const count = await this.countUsers(whereCondition)
 
     const result = Paginator.createPaginationResult(count, query, users)
     
     return result
   }
 
-  private async countUsers(query: { searchLoginTerm?: string; searchEmailTerm?: string }): Promise<number> {
-    const { searchLoginTerm, searchEmailTerm } = query;
+  private async countUsers(whereCondition): Promise<number> {
 
     const builder = this.userRepository.createQueryBuilder('user')
       .select('COUNT(*)', 'count')
-      .where('(COALESCE(user.login ILIKE :searchLoginTerm, true) OR COALESCE(user.email ILIKE :searchEmailTerm, true))', {
-        searchLoginTerm: searchLoginTerm ? `%${searchLoginTerm}%` : null,
-        searchEmailTerm: searchEmailTerm ? `%${searchEmailTerm}%` : null,
-      })
+      .where(whereCondition)
 
     const result = await builder.getRawOne()
     return +result.count

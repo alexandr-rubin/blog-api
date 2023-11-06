@@ -16,7 +16,7 @@ export class DeviceEntity {
   deviceName: string
   @Column()
   deviceId: string
-  @ManyToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity, {onDelete: 'CASCADE'})
   user: UserEntity
   @Column('uuid')
   userId: string

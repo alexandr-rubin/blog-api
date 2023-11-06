@@ -4,6 +4,7 @@ import { UserInputModel } from "./models/input/UserInput";
 import { UserViewModel } from "./models/view/UserView";
 import { User } from "./models/schemas/User";
 import { UserRoles } from "../helpers/userRoles";
+import { UpdateResult } from "typeorm";
 
 @Injectable()
 export class UserService {
@@ -32,7 +33,7 @@ export class UserService {
     return result
   }
 
-  async banOrUnbanUserById(userId: string, isBanned: boolean, banReason: string): Promise<boolean> {
+  async banOrUnbanUserById(userId: string, isBanned: boolean, banReason: string): Promise<UpdateResult> {
     const banDate = isBanned ? new Date().toISOString() : null
     banReason = isBanned ? banReason : null
     return await this.userRepository.banOrUnbanUserById(userId, isBanned, banReason, banDate)

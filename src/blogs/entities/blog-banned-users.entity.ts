@@ -20,7 +20,7 @@ export class BlogBannedUsersEntity {
   userId: string
   @Column()
   login: string
-  @ManyToOne(() => BlogEntity)
+  @ManyToOne(() => BlogEntity, {onDelete: 'CASCADE'})
   blog: BlogEntity
   @Column()
   blogId: string

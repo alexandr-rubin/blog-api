@@ -11,11 +11,13 @@ import { DataSource, Repository } from "typeorm";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { BlogEntity } from "./entities/blog.entity";
 import { BlogAdminViewModel } from "./models/view/BlogAdminViewModel";
+import { BlogBannedUsersEntity } from "./entities/blog-banned-users.entity";
 
 @Injectable()
 export class BlogQueryRepository {
   constructor(@InjectModel(Blog.name) private blogModel: Model<BlogDocument>, @InjectModel(BlogBannedUsers.name) private blogBannedUsersModel: Model<BlogBannedUsersDocument>,
-  @InjectDataSource() protected dataSource: DataSource, @InjectRepository(BlogEntity) private readonly blogRepository: Repository<BlogEntity>){}
+  @InjectDataSource() protected dataSource: DataSource, @InjectRepository(BlogEntity) private readonly blogRepository: Repository<BlogEntity>,
+  @InjectRepository(BlogBannedUsersEntity) private readonly blogBannedUsersRepository: Repository<BlogBannedUsersEntity>){}
   async getBlogs(params: QueryParamsModel, userId: string | null): Promise<Paginator<BlogViewModel>> {
     const query = createPaginationQuery(params)
     const blogs = await this.getBlogsWithFilter(query, userId)
@@ -42,7 +44,6 @@ export class BlogQueryRepository {
     const count = await this.countBlogs(query, null)
     const transformedBlogs = blogs.map(({ userId, banInfo, ...rest }) => ({ id: rest.id, ...rest, blogOwnerInfo: {userId: userId, userLogin: null}, 
     /*banInfo: {isBanned: rest.banInfo.isBanned, banDate: rest.banInfo.banDate}*/ }))
-    // const transformedBlogs = blogs.map(({ ...rest }) => ({ id: rest.id, ...rest, userId: undefined}))
     const result = Paginator.createPaginationResult(count, query, transformedBlogs)
     return result
   }
@@ -68,8 +69,13 @@ export class BlogQueryRepository {
   }
 
   async getBannedBlogsId(): Promise<string[]> {
-    const bannedBlogs = await this.blogModel.find({'banInfo.isBanned': true}, '_id')
-    const bannedBlogsIds = bannedBlogs.map(blog => blog._id.toString());
+    const bannedBlogs = await this.blogRepository
+    .createQueryBuilder('blog')
+    .select(['blog.id'])
+    .where('blog."banInfo"->>\'isBanned\' = :isBanned', { isBanned: true })
+    .getMany()
+    
+    const bannedBlogsIds = bannedBlogs.map(blog => blog.id)
     return bannedBlogsIds
   }
 

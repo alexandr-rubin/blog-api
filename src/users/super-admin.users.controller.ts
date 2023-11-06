@@ -18,6 +18,7 @@ export class UsersController {
   async getUsers(@Query() params: QueryParamsModel) {
     return await this.userQueryRepository.getUsers(params)
   }
+  
   @HttpCode(HttpStatusCode.CREATED_201)
   @Post()
   async createUser(@Body(EmailOrLoginExistsPipe) user: UserInputModel) {

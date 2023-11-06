@@ -11,11 +11,6 @@ export class CommentRepository {
   @InjectRepository(CommentLikesAndDislikesEntity) private readonly commentLikesAndDislikesRepository: Repository<CommentLikesAndDislikesEntity>){}
 
   async deleteCommentById(id: string): Promise<DeleteResult> {
-    await this.commentLikesAndDislikesRepository
-    .createQueryBuilder()
-    .delete()
-    .where('"commentId" = :id', { id: id })
-    .execute()
     return await this.commentRepository.delete(id)
   }
 

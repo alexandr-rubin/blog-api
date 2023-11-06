@@ -38,7 +38,7 @@ export class SecurityService {
     return !!result
   }
 
-  async terminateBannedUserSessions(userId: string): Promise<boolean>{
+  async terminateBannedUserSessions(userId: string): Promise<UpdateResult>{
     const isTerminated = await this.securityRepository.terminateBannedUserSessions(userId)
     return isTerminated
   }

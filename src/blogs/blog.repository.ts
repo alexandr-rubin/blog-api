@@ -26,11 +26,6 @@ export class BlogRepository {
   }
 
   async deleteBlogById(id: string): Promise<DeleteResult> {
-    await this.postRepository
-    .createQueryBuilder()
-    .delete()
-    .where('"blogId" = :id', { id: id })
-    .execute()
     return await this.blogRepository.delete(id)
   }
 
@@ -57,7 +52,7 @@ export class BlogRepository {
   }
 
   async bindBlogWithUser(blogId: string, userId: string): Promise<boolean>{
-    const result = await this.blogModel.findByIdAndUpdate(blogId, {userId: userId})  
+    const result = await this.blogRepository.update({id: blogId}, {userId: userId})  
     return !!result
   }
 

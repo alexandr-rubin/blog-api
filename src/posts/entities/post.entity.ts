@@ -11,7 +11,7 @@ export class PostEntity {
   shortDescription!: string
   @Column()
   content: string
-  @ManyToOne(() => BlogEntity)
+  @ManyToOne(() => BlogEntity, {onDelete: 'CASCADE'})
   blog: BlogEntity
   @Column('uuid')
   blogId: string

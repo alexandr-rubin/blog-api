@@ -9,8 +9,7 @@ import { UserEntity } from "./entities/user.entity";
 
 @Injectable()
 export class UserRepository {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>, @InjectDataSource() protected dataSource: DataSource,
-  @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>){}
+  constructor(@InjectDataSource() protected dataSource: DataSource, @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>){}
   //типизация
   async createUser(newUser: User) {
     return (await this.userRepository.save(newUser)).id
@@ -59,8 +58,8 @@ export class UserRepository {
     return user
   }
 
-  async banOrUnbanUserById(userId: string, isBanned: boolean, banReason: string, banDate: string): Promise<boolean> {
-    const result = await this.userModel.findByIdAndUpdate(userId, {banInfo: {isBanned: isBanned, banDate: banDate, banReason: banReason}})
-    return !!result
+  async banOrUnbanUserById(userId: string, isBanned: boolean, banReason: string, banDate: string): Promise<UpdateResult> {
+    const result = await this.userRepository.update({id: userId}, {banInfo: {isBanned: isBanned, banDate: banDate, banReason: banReason}})
+    return result
   }
 }

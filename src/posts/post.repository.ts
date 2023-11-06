@@ -46,12 +46,6 @@ export class PostRepository {
   }
 
   async deletePostById(id: string): Promise<DeleteResult> {
-    await this.deleteCommentsForPost(id)
-    await this.postLikesAndDislikesRepository
-    .createQueryBuilder()
-    .delete()
-    .where('"postId" = :id', { id: id })
-    .execute()
     return await this.postRepository.delete(id)
   }
 
