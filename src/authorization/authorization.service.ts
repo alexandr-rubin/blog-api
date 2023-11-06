@@ -95,6 +95,9 @@ export class AuthorizationService {
   async verifyUser(loginData: LoginValidation): Promise<string> {
     const user = await this.userRepository.verifyUser(loginData)
     if(user){
+      if(user.banInfo.isBanned === true){
+        throw new UnauthorizedException
+      }
       try {
         const isMatch = await compare(loginData.password, user.password)
         if(isMatch){

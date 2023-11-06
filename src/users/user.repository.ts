@@ -1,8 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
 import { LoginValidation } from "../validation/login";
-import { User, UserDocument } from "./models/schemas/User";
+import { User } from "./models/schemas/User";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { DataSource, DeleteResult, Repository, UpdateResult } from "typeorm";
 import { UserEntity } from "./entities/user.entity";
