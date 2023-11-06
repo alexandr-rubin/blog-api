@@ -49,8 +49,7 @@ export class BlogQueryRepository {
 
   async getBlogById(blogId: string): Promise<BlogViewModel> {
     const blog = await this.blogRepository.findOneBy({id: blogId})
-
-    if (!blog || blog[0].banInfo.isBanned){
+    if (!blog || blog.banInfo.isBanned){
       throw new NotFoundException()
     }
     
