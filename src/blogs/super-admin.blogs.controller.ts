@@ -31,7 +31,7 @@ export class SuperAdminBlogsController {
 
   @HttpCode(HttpStatusCode.NO_CONTENT_204)
   @Put(':blogId/ban')
-  async banOrUnbanUserById(@Body() banInfo: BanBlogInputModel, @Param('blogId', BlogIdValidationPipe) blogId: string) {
+  async banOrUnbanBlogById(@Body() banInfo: BanBlogInputModel, @Param('blogId', BlogIdValidationPipe) blogId: string) {
     return await this.blogService.banOrUnbanBlogById(blogId, banInfo.isBanned)
   }
 }

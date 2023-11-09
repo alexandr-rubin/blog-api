@@ -800,7 +800,7 @@ window.onload = function() {
       },
       "/sa/blogs/{blogId}/ban": {
         "put": {
-          "operationId": "SuperAdminBlogsController_banOrUnbanUserById",
+          "operationId": "SuperAdminBlogsController_banOrUnbanBlogById",
           "parameters": [
             {
               "name": "blogId",

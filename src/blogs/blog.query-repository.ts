@@ -42,7 +42,7 @@ export class BlogQueryRepository {
     const query = createPaginationQuery(params)
     const blogs = await this.getBlogsWithFilter(query, null)
     const count = await this.countBlogs(query, null)
-    const transformedBlogs = blogs.map(({ userId, banInfo, ...rest }) => ({ id: rest.id, ...rest, blogOwnerInfo: {userId: userId, userLogin: null}, 
+    const transformedBlogs = blogs.map(({ userId, ...rest }) => ({ id: rest.id, ...rest, blogOwnerInfo: {userId: userId, userLogin: null}, 
     /*banInfo: {isBanned: rest.banInfo.isBanned, banDate: rest.banInfo.banDate}*/ }))
     const result = Paginator.createPaginationResult(count, query, transformedBlogs)
     return result
