@@ -100,8 +100,8 @@ export class BlogService {
     await this.validateBlogUser(banInfo.blogId, blogOwnerId)
     const newBannedUserInfo: BlogBannedUsers = {
       isBanned: banInfo.isBanned,
-      banReason: banInfo.isBanned ? banInfo.banReason : null,
-      banDate: banInfo.isBanned ? new Date().toISOString() : null,
+      banReason: banInfo.banReason,
+      banDate: new Date().toISOString(),
       userId: userId,
       login: userLogin,
       blogId: banInfo.blogId,

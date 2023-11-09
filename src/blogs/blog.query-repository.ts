@@ -124,8 +124,19 @@ export class BlogQueryRepository {
         }
     }))
 
-    const count = await this.blogBannedUsersModel.countDocuments({blogId: blogId, isBanned: true})
-
+    const count = await this.blogBannedUsersRepository
+    .createQueryBuilder('user')
+    .select()
+    .where((qb) => {
+      if (query.searchLoginTerm) {
+        qb.andWhere('user.login ILIKE :searchLoginTerm', {
+          searchLoginTerm: query.searchLoginTerm ? `%${query.searchLoginTerm}%` : '',
+        })
+      }
+      qb.andWhere('user.blogId = :blogId AND user.isBanned = :isBanned', {blogId: blogId, isBanned: true})
+    })
+    .getCount()
+    
     const result = Paginator.createPaginationResult(count, query, mappedUsers)
     
     return result
