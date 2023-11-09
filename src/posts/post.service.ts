@@ -70,13 +70,13 @@ export class PostService {
       throw new ForbiddenException()
     }
     // у сблога список бан. если там есть юзер id то ошибка
-    const comment: SQLCommentInputModel = {content: content, commentatorInfo: {userId: userId, userLogin: userLogin}, createdAt: new Date().toISOString(), postId: pId,
+    const comment: SQLCommentInputModel = {content: content, userId: userId, userLogin: userLogin, createdAt: new Date().toISOString(), postId: pId,
     likesAndDislikesCount: {likesCount: 0, dislikesCount: 0}}
 
     const commentId = await this.postRepository.createComment(comment)
     const result = 
     ({id: commentId, ...comment, commentatorInfo: 
-    {userId: comment.commentatorInfo.userId, userLogin: comment.commentatorInfo.userLogin}, 
+    {userId: comment.userId, userLogin: comment.userLogin}, 
     likesInfo: {likesCount: comment.likesAndDislikesCount.likesCount, 
     dislikesCount: comment.likesAndDislikesCount.dislikesCount , myStatus: LikeStatuses.None}, postId: undefined, likesAndDislikesCount: undefined})
 

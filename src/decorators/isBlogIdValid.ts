@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { registerDecorator, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 import { BlogExistValidator } from '../validation/BlogExistValidator';
 
@@ -8,6 +8,10 @@ export class IsBlogIdValidConstraint implements ValidatorConstraintInterface {
   constructor(private blogExistValidator: BlogExistValidator) {}
 
   async validate(blogId: string) {
+    const isValidUUIDv4 = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(blogId)
+      if (!isValidUUIDv4) {
+        throw new BadRequestException(`Invalid BlogId. It should be a valid uuid.`);
+      }
     return await this.blogExistValidator.validate(blogId)
   }
 

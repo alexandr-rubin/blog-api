@@ -32,8 +32,22 @@ export class BlogQueryRepository {
   }
 
   async getBlogsIds(userId: string | null): Promise<string[]> {
-    const blogs = await this.blogModel.find({userId: userId, 'banInfo.isBanned': false})
-    const blogIdArray = blogs.map((blog) => (blog._id.toString()))
+    //const blogs = await this.blogRepository.findBy({userId: userId, 'banInfo.isBanned': false})
+    const notBannedBlogs = await this.blogRepository
+    .createQueryBuilder('blog')
+    .select(['blog.id'])
+    .where((qb) => {
+      qb.andWhere('blog.userId = :userId AND blog.banInfo ->> \'isBanned\' = :isBanned', { isBanned: false })
+      if (userId !== null) {
+        qb.andWhere('blog.userId = :userId', {
+          userId: userId
+        })
+      }
+    })
+    //.where('blog.userId = :userId AND blog.banInfo ->> \'isBanned\' = :isBanned', { isBanned: false })
+    .getMany()
+
+    const blogIdArray = notBannedBlogs.map((blog) => (blog.id))
     
     return blogIdArray
   }
@@ -148,8 +162,8 @@ export class BlogQueryRepository {
     return result
   }
 
-  async getSingleBannedUserForBlog(userId: string, blogId: string): Promise<BlogBannedUsersDocument>{
-    const user = await this.blogBannedUsersModel.findOne({userId: userId, blogId: blogId})
+  async getSingleBannedUserForBlog(userId: string, blogId: string): Promise<BlogBannedUsersEntity>{
+    const user = await this.blogBannedUsersRepository.findOneBy({userId: userId, blogId: blogId})
     return user
   }
 

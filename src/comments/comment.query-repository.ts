@@ -13,7 +13,7 @@ export class CommentQueryRepository {
 
   async getCommentById(commentId: string, userId: string, bannedUserIds: string[]): Promise<CommentViewModel> {
     const comment: CommentEntity = await this.commentRepository.findOneBy({id: commentId})
-    if (!comment || bannedUserIds.includes(comment.commentatorInfo.userId)){
+    if (!comment || bannedUserIds.includes(comment.userId)){
       throw new NotFoundException('Comment not found')
     }
     const commentLikes = await this.getCommentLikesAndDislikesById(comment.id)
@@ -25,7 +25,7 @@ export class CommentQueryRepository {
     const likesCount = filteredLikesAndDislikes.filter(element => element.likeStatus === LikeStatuses.Like).length
     const dislikesCount = filteredLikesAndDislikes.filter(element => element.likeStatus === LikeStatuses.Dislike).length
 
-    const result = {...comment, commentatorInfo: {userId: comment.commentatorInfo.userId, userLogin: comment.commentatorInfo.userLogin},
+    const result = {...comment, commentatorInfo: {userId: comment.userId, userLogin: comment.userLogin},
     likesInfo: {likesCount: likesCount, dislikesCount: dislikesCount, myStatus: likeStatus}, postId: undefined, likesAndDislikesCount: undefined}
     return result
   }

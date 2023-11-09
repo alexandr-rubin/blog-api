@@ -9,12 +9,13 @@ import { DataSource, DeleteResult, Repository, UpdateResult } from "typeorm";
 import { SQLPostInputModel } from "../posts/models/input/SQLPost";
 import { BlogEntity } from "./entities/blog.entity";
 import { PostEntity } from "../posts/entities/post.entity";
+import { BlogBannedUsersEntity } from "./entities/blog-banned-users.entity";
 
 @Injectable()
 export class BlogRepository {
-  constructor(@InjectModel(Blog.name) private blogModel: Model<BlogDocument>,
-  @InjectModel(BlogBannedUsers.name) private blogBannedUsersModel: Model<BlogBannedUsersDocument>, @InjectDataSource() protected dataSource: DataSource,
-  @InjectRepository(BlogEntity) private readonly blogRepository: Repository<BlogEntity>, @InjectRepository(PostEntity) private readonly postRepository: Repository<PostEntity>){}
+  constructor(@InjectModel(Blog.name) private blogModel: Model<BlogDocument>, @InjectDataSource() protected dataSource: DataSource,
+  @InjectRepository(BlogEntity) private readonly blogRepository: Repository<BlogEntity>, @InjectRepository(PostEntity) private readonly postRepository: Repository<PostEntity>,
+  @InjectRepository(BlogBannedUsersEntity) private readonly blogBannedUsersRepository: Repository<BlogBannedUsersEntity>){}
 
   // типизация
   async addBlog(blog: Blog): Promise<string> {
@@ -61,13 +62,12 @@ export class BlogRepository {
     return result
   }
 
-  async banNewUserForBlog(newBannedUserInfo: BlogBannedUsers) {
-    const bannedUser = new this.blogBannedUsersModel(newBannedUserInfo)
-    await bannedUser.save()
+  async banNewUserForBlog(newBannedUserInfo: BlogBannedUsers): Promise<BlogBannedUsersEntity> {
+    const bannedUser = await this.blogBannedUsersRepository.save(newBannedUserInfo)
     return bannedUser
   }
 
-  async banExistingUserForBlog(blog: BlogBannedUsersDocument) {
-    return await blog.save()
+  async banExistingUserForBlog(blog: BlogBannedUsersEntity) {
+    return await this.blogBannedUsersRepository.update({id: blog.id}, blog)
   }
 }

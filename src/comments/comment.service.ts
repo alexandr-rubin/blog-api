@@ -11,7 +11,7 @@ export class CommentService {
 
   async deleteCommentById(id: string, userId: string): Promise<DeleteResult> {
     const comment = await this.commentQueryRepository.getCommentByIdNoView(id)
-    if(comment && comment.commentatorInfo.userId !== userId){
+    if(comment && comment.userId !== userId){
       throw new ForbiddenException()
     }
     
@@ -24,7 +24,7 @@ export class CommentService {
 
   async updateCommentById(id: string, newComment: CommentInputModel, userId: string): Promise<CommentEntity> {
     const comment = await this.commentQueryRepository.getCommentByIdNoView(id)
-    if(comment && comment.commentatorInfo.userId !== userId){
+    if(comment && comment.userId !== userId){
       throw new ForbiddenException()
     }
     comment.content = newComment.content

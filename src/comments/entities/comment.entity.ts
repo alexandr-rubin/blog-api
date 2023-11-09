@@ -1,3 +1,4 @@
+import { UserEntity } from "../../users/entities/user.entity"
 import { PostEntity } from "../../posts/entities/post.entity"
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
 
@@ -7,8 +8,14 @@ export class CommentEntity {
   id: string
   @Column()
   content: string
-  @Column('jsonb')
-  commentatorInfo: {userId: string, userLogin: string}
+  // @Column('jsonb')
+  // commentatorInfo: {userId: string, userLogin: string}
+  @ManyToOne(() => UserEntity, {onDelete: 'CASCADE'})
+  user: UserEntity
+  @Column('uuid')
+  userId: string
+  @Column()
+  userLogin: string
   @Column()
   createdAt: string
   @ManyToOne(() => PostEntity, {onDelete: 'CASCADE'})

@@ -9,7 +9,6 @@ import { PostLike } from "./models/schemas/Post";
 import { CommentLike } from "../comments/models/schemas/CommentLike";
 import { DataSource, In, Not, Repository } from "typeorm";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
-import { SQLPostViewModel } from "./models/view/SQLPost";
 import { PostEntity } from "./entities/post.entity";
 import { PostLikesAndDislikesEntity } from "./entities/post-likes-and-dislikes.entity";
 import { CommentEntity } from "../comments/entities/comment.entity";
@@ -197,21 +196,26 @@ export class PostQueryRepository {
     const postIdArray = postsArray.map(({...post}) => (post.id.toString()))
     const query = createPaginationQuery(params)
     const skip = (query.pageNumber - 1) * query.pageSize
-    // const filter = { postId: { $in: postIdArray }, 'commentatorInfo.userId': { $nin: bannedUserIds } }
-    // const comments = await this.commentModel.find(filter, {__v: false}).sort({[query.sortBy]: query.sortDirection === 'asc' ? 1 : -1})
-    // .skip(skip)
-    // .limit(query.pageSize).lean()
-    const comments: CommentEntity[] = await this.dataSource.query(`
-    SELECT * FROM public."Comments"
-    WHERE "postId" IN $1 and ("commentatorInfo"->>'userId')::int NOT IN ($2)
-    ORDER BY p."${query.sortBy}" COLLATE "C" ${query.sortDirection}
-    OFFSET $3
-    LIMIT $4
-    `, [postIdArray, bannedUserIds, skip, query.pageSize])
-    const count = await this.dataSource.query(`
-      SELECT COUNT(*) FROM public."Posts" p
-      WHERE "postId" IN $1 and ("commentatorInfo"->>'userId')::int NOT IN ($2)
-    `,[postIdArray, bannedUserIds])
+
+    const comments: CommentEntity[] = await this.commentRepository
+    .createQueryBuilder("comment")
+    .select()
+    .where({
+      postId: In(postIdArray),
+      userId: Not(In(bannedUserIds))})
+    .orderBy(`comment.${query.sortBy} COLLATE "C"`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
+    .skip(skip)
+    .take(query.pageSize)
+    .getMany()
+
+
+    const count = await this.commentRepository.createQueryBuilder("comment")
+    .select()
+    .where({
+      postId: In(postIdArray),
+      userId: Not(In(bannedUserIds))})
+    .getCount()
+
     const mappedComments = comments.map(comment => {
       // if !post
       const post = postsArray.find(post => post.id.toString() === comment.postId)
@@ -231,18 +235,19 @@ export class PostQueryRepository {
     return await this.editCommentToViewModel(result, userId, bannedUserIds)
   }
 
-  private async getPostssForBlogs(blogIdArray: string[]): Promise<SQLPostViewModel[]> {
-    const posts: SQLPostViewModel[] = await this.dataSource.query(`
-    SELECT * FROM public."Posts"
-    WHERE blogId IN ($1)
-    `, [blogIdArray])
+  private async getPostssForBlogs(blogIdArray: string[]): Promise<PostEntity[]> {
+    const posts = await this.postRepository
+    .createQueryBuilder("post")
+    .where("post.blogId IN (:...ids)", { ids: blogIdArray })
+    .getMany()
+
     return posts
   }
 
   private async editCommentToViewModel(comment: Paginator<CommentEntity>, userId: string, bannedUserIds: string[]): Promise<Paginator<CommentViewModel>> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const newArray = {...comment, items: comment.items.map(({postId, likesAndDislikesCount, ...rest }) => ({
-        ...rest, commentatorInfo: {userId: rest.commentatorInfo.userId, userLogin: rest.commentatorInfo.userLogin},
+        ...rest, commentatorInfo: {userId: rest.userId, userLogin: rest.userLogin},
         likesInfo: { likesCount: 0,  dislikesCount: 0, myStatus: LikeStatuses.None.toString() }
     }))}
     for(let i = 0; i < newArray.items.length; i++){
