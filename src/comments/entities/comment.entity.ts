@@ -8,8 +8,6 @@ export class CommentEntity {
   id: string
   @Column()
   content: string
-  // @Column('jsonb')
-  // commentatorInfo: {userId: string, userLogin: string}
   @ManyToOne(() => UserEntity, {onDelete: 'CASCADE'})
   user: UserEntity
   @Column('uuid')

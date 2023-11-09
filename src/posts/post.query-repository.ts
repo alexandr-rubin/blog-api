@@ -12,12 +12,14 @@ import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { PostEntity } from "./entities/post.entity";
 import { PostLikesAndDislikesEntity } from "./entities/post-likes-and-dislikes.entity";
 import { CommentEntity } from "../comments/entities/comment.entity";
+import { CommentLikesAndDislikesEntity } from "../comments/entities/comment-likes-and-dislikes";
 
 @Injectable()
 export class PostQueryRepository {
   constructor(@InjectDataSource() protected dataSource: DataSource, @InjectRepository(PostEntity) private readonly postRepository: Repository<PostEntity>,
   @InjectRepository(PostLikesAndDislikesEntity) private readonly postLikesAndDislikesRepository: Repository<PostLikesAndDislikesEntity>,
-  @InjectRepository(CommentEntity) private readonly commentRepository: Repository<CommentEntity>){}
+  @InjectRepository(CommentEntity) private readonly commentRepository: Repository<CommentEntity>,
+  @InjectRepository(CommentLikesAndDislikesEntity) private readonly commentLikesAndDislikesRepository: Repository<CommentLikesAndDislikesEntity>){}
 
   async getPosts(params: QueryParamsModel, userId: string, bannedUserIds: string[], bannedBlogsIds: string[]): Promise<Paginator<PostViewModel>> {
     // fix
@@ -219,7 +221,9 @@ export class PostQueryRepository {
     const mappedComments = comments.map(comment => {
       // if !post
       const post = postsArray.find(post => post.id.toString() === comment.postId)
+
       delete comment.postId
+      
       const postInfo = {
         id: post.id,
         title: post.title,
@@ -246,8 +250,8 @@ export class PostQueryRepository {
 
   private async editCommentToViewModel(comment: Paginator<CommentEntity>, userId: string, bannedUserIds: string[]): Promise<Paginator<CommentViewModel>> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const newArray = {...comment, items: comment.items.map(({postId, likesAndDislikesCount, ...rest }) => ({
-        ...rest, commentatorInfo: {userId: rest.userId, userLogin: rest.userLogin},
+    const newArray = {...comment, items: comment.items.map(({userId, userLogin, postId, likesAndDislikesCount, ...rest }) => ({
+        ...rest, commentatorInfo: {userId: userId, userLogin: userLogin},
         likesInfo: { likesCount: 0,  dislikesCount: 0, myStatus: LikeStatuses.None.toString() }
     }))}
     for(let i = 0; i < newArray.items.length; i++){
@@ -267,13 +271,17 @@ export class PostQueryRepository {
     return newArray
   }
 
-  async getCommentLikesAndDislikesById(commentId: string){
-    const likesAndDislokes = await this.dataSource.query(`
-      SELECT "userId", "addedAt", "likeStatus" FROM public."CommentLikesAndDislikes"
-      WHERE "commentId" = $1
-    `, [commentId])
+  async getCommentLikesAndDislikesById(commentId: string) {
+    const likesAndDislikes = await this.commentLikesAndDislikesRepository.createQueryBuilder('likeOrDislike')
+    .select(['likeOrDislike.userId', 'likeOrDislike.addedAt', 'likeOrDislike.likeStatus'])
+    .where('likeOrDislike.commentId = :commentId', {commentId: commentId})
+    .getMany()
+    // const likesAndDislokes = await this.dataSource.query(`
+    //   SELECT "userId", "addedAt", "likeStatus" FROM public."CommentLikesAndDislikes"
+    //   WHERE "commentId" = $1
+    // `, [commentId])
 
-    return likesAndDislokes
+    return likesAndDislikes
   }
 
   private filterLikesAndDislikes(likesAndDislikes: PostLike[] | CommentLike[], bannedUserIds: string[]) {
