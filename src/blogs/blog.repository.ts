@@ -3,7 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { BlogInputModel } from "./models/input/BlogInputModel";
 import { Blog, BlogDocument } from "./models/schemas/Blog";
-import { BlogBannedUsers, BlogBannedUsersDocument } from "./models/schemas/BlogBannedUsers";
+import { BlogBannedUsers } from "./models/schemas/BlogBannedUsers";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { DataSource, DeleteResult, Repository, UpdateResult } from "typeorm";
 import { SQLPostInputModel } from "../posts/models/input/SQLPost";

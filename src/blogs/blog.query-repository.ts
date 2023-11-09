@@ -94,56 +94,25 @@ export class BlogQueryRepository {
   }
 
   async getBannedUsersForBlog(params: QueryParamsModel, blogId: string)/*: Promise<Paginator<>>*/ {
-    // const blog = await this.blogModel.findById(blogId)
-    
-    // if(!blog){
-    //   throw new NotFoundException()
-    // }
-    // const query = createPaginationQuery(params)
-    
-    // // const bannedUsers = blog.blogBannedUsers.filter(user => 
-    // //   user.isBanned === true && 
-    // //   (query.searchLoginTerm === null || new RegExp(query.searchLoginTerm, 'i').test(user.userLogin))
-    // // )
-
-    // const skip = (query.pageNumber - 1) * query.pageSize
-
-    // //fix
-    // const bannedUsers = blog.blogBannedUsers
-    // .filter(user => 
-    // user.isBanned === true && 
-    // (query.searchLoginTerm === null || new RegExp(query.searchLoginTerm, 'i').test(user.userLogin))
-    // )
-    // .sort((a, b) => {
-    //   if (query.sortDirection === 'asc') {
-    //     return a[query.sortBy] - b[query.sortBy];
-    //   } else {
-    //     return b[query.sortBy] - a[query.sortBy];
-    //   }
-    // })
-    // .slice(skip, skip + query.pageSize)
-    
-    // const mappedArray = bannedUsers.map(user => ({
-    //   id: user.userId,
-    //   login: user.userLogin,
-    //   banInfo: {
-    //     isBanned: user.isBanned,
-    //     banDate: user.banDate,
-    //     banReason: user.banReason
-    //   }
-    // }))
-
-    // const count = blog.blogBannedUsers.filter(user => user.isBanned === true).length
-
-    // const result = Paginator.createPaginationResult(count, query, mappedArray)
-
-    // return result
     
     const query = createPaginationQuery(params)
     const skip = (query.pageNumber - 1) * query.pageSize
-    const filter = query.searchLoginTerm === null ? {blogId: blogId, isBanned: true} : { userLogin: { $regex: query.searchLoginTerm, $options: 'i' }, isBanned: true}
-    const users = await this.blogBannedUsersModel.find(filter, { __v: false })
-    .sort({[query.sortBy]: query.sortDirection === 'asc' ? 1 : -1}).skip(skip).limit(query.pageSize).lean()
+
+    const users = await this.blogBannedUsersRepository
+    .createQueryBuilder('user')
+    .select()
+    .where((qb) => {
+      if (query.searchLoginTerm) {
+        qb.andWhere('user.login ILIKE :searchLoginTerm', {
+          searchLoginTerm: query.searchLoginTerm ? `%${query.searchLoginTerm}%` : '',
+        })
+      }
+      qb.andWhere('user.blogId = :blogId AND user.isBanned = :isBanned', {blogId: blogId, isBanned: true})
+    })
+    .orderBy(`"user"."${query.sortBy}" COLLATE "C"`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
+    .skip(skip)
+    .take(query.pageSize)
+    .getMany()
 
     const mappedUsers = users.map(user => ({
         id: user.userId,

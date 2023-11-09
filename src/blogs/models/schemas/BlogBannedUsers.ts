@@ -17,6 +17,8 @@ export class BlogBannedUsers {
   login!: string
   @Prop()
   blogId!: string
+  @Prop()
+  createdAt: string
 }
 
 export const BlogBannedUsersSchema = SchemaFactory.createForClass(BlogBannedUsers)

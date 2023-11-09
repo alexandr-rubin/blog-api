@@ -104,7 +104,8 @@ export class BlogService {
       banDate: banInfo.isBanned ? new Date().toISOString() : null,
       userId: userId,
       login: userLogin,
-      blogId: banInfo.blogId
+      blogId: banInfo.blogId,
+      createdAt: new Date().toISOString()
     }
     
     const bannedUser = await this.blogQueryRepository.getSingleBannedUserForBlog(userId, banInfo.blogId)
