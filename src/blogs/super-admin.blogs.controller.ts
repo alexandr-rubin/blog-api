@@ -18,8 +18,6 @@ export class SuperAdminBlogsController {
   @Get()
   async getBlogs(@Query() params: QueryParamsModel) {
     const blogs = await this.blogQueryRepository.getSuperAdminBlogs(params)
-    // rename method
-    // раскомментить после удаления симпл. подумать если null то не обязательно ошибка. ведь супер анмин содает с налом
     await this.userQueryRepository.getUsersForAdminBlogs(blogs.items)
     return blogs
   }

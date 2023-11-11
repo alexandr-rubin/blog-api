@@ -29,7 +29,6 @@ export class SecurityQueryRepository {
     }
   }
 
-  /////////////////////////
   async compareTokenDate(token: string): Promise<boolean>{
     try{
       const decodedToken = await this.jwtService.verifyAsync(token)

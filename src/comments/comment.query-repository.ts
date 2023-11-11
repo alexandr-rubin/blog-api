@@ -19,7 +19,6 @@ export class CommentQueryRepository {
     const commentLikes = await this.getCommentLikesAndDislikesById(comment.id)
     const like = commentLikes.find(like => like.userId === userId && !bannedUserIds.includes(like.userId))
     const likeStatus = like === undefined ? LikeStatuses.None : like.likeStatus
-    // 
     const filteredLikesAndDislikes = commentLikes
     .filter(element => !bannedUserIds.includes(element.userId))
     const likesCount = filteredLikesAndDislikes.filter(element => element.likeStatus === LikeStatuses.Like).length

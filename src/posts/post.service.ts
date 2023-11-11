@@ -17,7 +17,6 @@ export class PostService {
   constructor(private postRepository: PostRepository, private blogQueryRepository: BlogQueryRepository, private postQueryRepository: PostQueryRepository){}
 
   async addPost(post: PostInputModel): Promise<PostViewModel>{
-    //
     const blog = await this.blogQueryRepository.getBlogById(post.blogId)
     if(!blog){
       throw new NotFoundException('Blog is not found')

@@ -22,17 +22,8 @@ export class PostQueryRepository {
   @InjectRepository(CommentLikesAndDislikesEntity) private readonly commentLikesAndDislikesRepository: Repository<CommentLikesAndDislikesEntity>){}
 
   async getPosts(params: QueryParamsModel, userId: string, bannedUserIds: string[], bannedBlogsIds: string[]): Promise<Paginator<PostViewModel>> {
-    // fix
     const query = createPaginationQuery(params)
     const skip = (query.pageNumber - 1) * query.pageSize
-
-    // const filter = {
-    //   $and: [
-    //     query.searchNameTerm === null ? {} : { name: { $regex: query.searchNameTerm, $options: 'i' } },
-    //     { blogId: { $nin: bannedBlogsIds } }
-    //   ]
-    // }
-
     const posts = await this.postRepository
     .createQueryBuilder('post')
     .select()
@@ -52,11 +43,6 @@ export class PostQueryRepository {
   }
 
   async getPostgById(postId: string, userId: string, bannedUserIds: string[], bannedBlogsIds: string[]): Promise<PostViewModel | null> {
-    // const post = await this.postRepository
-    // .createQueryBuilder('post')
-    // .select()
-    // .where("post.id = :postId AND post.blogId NOT IN (:...bannedBlogsIds)", { postId: postId, bannedBlogsIds: bannedBlogsIds })
-    // .getOne()
     const post = await this.postRepository.findOne({
       where: {
         id: postId,
@@ -103,7 +89,6 @@ export class PostQueryRepository {
       })
     }
     for(let i = 0; i < newArray.items.length; i++){
-      //
       const postLikesAndDislikes = await this.getPostLikesAndDislikesById(post.items[i].id)
       const filteredLikesAndDislikes = this.filterLikesAndDislikes(postLikesAndDislikes, bannedUserIds)
       const likesCount = filteredLikesAndDislikes.likesCount
@@ -143,11 +128,6 @@ export class PostQueryRepository {
     }
     const query = createPaginationQuery(params)
     const skip = (query.pageNumber - 1) * query.pageSize
-    // const comments = await this.commentModel.find({postId: postId, 'commentatorInfo.userId': { $nin: bannedUserIds }}, {postId: false, __v: false})
-    // .sort({[query.sortBy]: query.sortDirection === 'asc' ? 1 : -1})
-    // .skip(skip)
-    // .limit(query.pageSize).lean()
-    // const count = await this.commentModel.countDocuments({postId: postId, 'commentatorInfo.userId': { $nin: bannedUserIds }})
     const comments: CommentEntity[] = await this.commentRepository.createQueryBuilder('c')
       .where('c.postId = :postId', { postId })
       .orderBy(`c.${query.sortBy}`, query.sortDirection === 'asc' ? 'ASC' : 'DESC')
@@ -276,10 +256,6 @@ export class PostQueryRepository {
     .select(['likeOrDislike.userId', 'likeOrDislike.addedAt', 'likeOrDislike.likeStatus'])
     .where('likeOrDislike.commentId = :commentId', {commentId: commentId})
     .getMany()
-    // const likesAndDislokes = await this.dataSource.query(`
-    //   SELECT "userId", "addedAt", "likeStatus" FROM public."CommentLikesAndDislikes"
-    //   WHERE "commentId" = $1
-    // `, [commentId])
 
     return likesAndDislikes
   }

@@ -114,7 +114,6 @@ export class AuthorizationService {
     throw new UnauthorizedException()
   }
 
-  ////
   async createJWT(userId: string, deviceId: string, issuedAt: string): Promise<CreateJWT> {
     const JWT_SECRET_KEY = this.configService.get('JWT_SECRET_KEY')
     const accessTokenPayload = { userId: userId, JWT_SECRET_KEY }
@@ -128,7 +127,6 @@ export class AuthorizationService {
 
   async signIn(userId: string, userAgent: string | undefined, clientIP: string){
     if (!userAgent){
-      //
       userAgent = 'default device name'
     }
     const deviceId = uuidv4()
@@ -137,7 +135,6 @@ export class AuthorizationService {
     const decodedToken = await this.jwtService.verifyAsync(tokens.refreshToken)
     const expirationDate = new Date(decodedToken.exp * 1000)
     const device: Device = {issuedAt: issuedAt, expirationDate: expirationDate.toISOString(), IP: clientIP, deviceName: userAgent, deviceId: deviceId, userId: userId, isValid: true}
-    ////
     await this.authorizationRepository.addDevice(device)
 
     return tokens
@@ -163,7 +160,6 @@ export class AuthorizationService {
   }
 
   async logoutDevice(refreshToken: string): Promise<UpdateResult>{
-    ////
     const decodedToken = await this.jwtService.verifyAsync(refreshToken)
     const isLogedout = await this.authorizationRepository.logoutDevice(decodedToken.deviceId)
     return isLogedout

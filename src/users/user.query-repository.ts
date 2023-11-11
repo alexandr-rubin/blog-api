@@ -30,23 +30,8 @@ export class UserQueryRepository {
   }
 
   async getUsers(params: QueryParamsModel): Promise<Paginator<UserEntity>> {
-    //
     const query = createPaginationQuery(params)
     const skip = (query.pageNumber - 1) * query.pageSize
-    //
-    // const search : any = {}
-    // if(query.searchLoginTerm != null){
-    //   search.login = {$regex: query.searchLoginTerm, $options: 'i'}
-    // }
-    // if(query.searchEmailTerm != null){
-    //   search.email = {$regex: query.searchEmailTerm, $options: 'i'}
-    // }
-    // if(query.banStatus != null && query.banStatus === "banned"){
-    //   search["banInfo.isBanned"] = true
-    // }
-    // if(query.banStatus != null && query.banStatus === "notBanned"){
-    //   search["banInfo.isBanned"] = false
-    // }
 
     const whereCondition = (qb) => {
       if (query.searchLoginTerm || query.searchEmailTerm) {

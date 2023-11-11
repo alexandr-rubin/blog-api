@@ -5,7 +5,6 @@ import { Request } from "express";
 import { SecurityService } from "./security.service";
 import { RefreshTokenGuard } from "../guards/refreshToken.guard";
 
-// add JWT auth?
 @Controller('security')
 export class SecurityController {
   constructor(private readonly securityQueryRepository: SecurityQueryRepository, private securityService: SecurityService){}

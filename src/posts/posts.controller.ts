@@ -3,7 +3,6 @@ import { HttpStatusCode } from "../helpers/httpStatusCode";
 import { PostService } from "./post.service";
 import { PostQueryRepository } from "./post.query-repository";
 import { QueryParamsModel } from "../models/PaginationQuery";
-//import { BlogIdForPostValidationPipe } from "../validation/pipes/body-blog-id-validation.pipe";
 import { PostIdValidationPipe } from "../validation/pipes/post-Id-validation.pipe";
 import { AccessTokenVrifyModel } from "../models/Auth";
 import { Request } from 'express'
@@ -34,23 +33,8 @@ export class PostsController {
     }
     const bannedUserIds = await this.userQueryRepository.getBannedUsersId()
     const bannedBlogsIds = await this.blogQueryRepository.getBannedBlogsId()
-    // add userID
     return await this.postQueryRepository.getPosts(params, userId, bannedUserIds, bannedBlogsIds)
   }
-
-  // @UseGuards(BasicAuthGuard)
-  // @HttpCode(HttpStatusCode.CREATED_201)
-  // @Post()
-  // async createPost(@Body(/*BlogIdForPostValidationPipe*/) post: PostInputModel) {
-  //   return await this.postService.addPost(post)
-  // }
-
-  // @UseGuards(BasicAuthGuard)
-  // @HttpCode(HttpStatusCode.NO_CONTENT_204)
-  // @Delete(':postId')
-  // async deletePostById(@Param('postId', PostIdValidationPipe) id: string) {
-  //   return await this.postService.deletePostById(id)
-  // }
 
   @Get(':postId')
   async getPostById(@Param('postId', PostIdValidationPipe) id: string, @Req() req: Request) {
@@ -61,16 +45,8 @@ export class PostsController {
     }
     const bannedUserIds = await this.userQueryRepository.getBannedUsersId()
     const bannedBlogsIds = await this.blogQueryRepository.getBannedBlogsId()
-    // userID
     return await this.postQueryRepository.getPostgById(id, userId, bannedUserIds, bannedBlogsIds)
   }
-
-  // @UseGuards(BasicAuthGuard)
-  // @HttpCode(HttpStatusCode.NO_CONTENT_204)
-  // @Put(':postId')
-  // async updatePostById(@Param('postId', PostIdValidationPipe) id: string, @Body() post: PostInputModel) {
-  //   return await this.postService.updatePostById(id, post) 
-  // }
 
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatusCode.CREATED_201)
@@ -87,7 +63,6 @@ export class PostsController {
       userId = await this.jwtAuthService.verifyToken(bearer)
     }
     const bannedUserIds = await this.userQueryRepository.getBannedUsersId()
-    // userId
     return await this.postQueryRepository.getCommentsForSpecifiedPost(postId, params, userId, bannedUserIds)
   }
 

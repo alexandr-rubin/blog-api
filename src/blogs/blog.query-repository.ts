@@ -22,7 +22,6 @@ export class BlogQueryRepository {
     const query = createPaginationQuery(params)
     const blogs = await this.getBlogsWithFilter(query, userId)
     
-    // раскомментить когда верну баны
     const transformedBlogs = blogs.filter(blog => !blog.banInfo.isBanned).map(({ userId, banInfo, ...rest }) => ({ id: rest.id, ...rest }))
 
     const count = await this.countBlogs(query, userId)
@@ -32,7 +31,6 @@ export class BlogQueryRepository {
   }
 
   async getBlogsIds(userId: string | null): Promise<string[]> {
-    //const blogs = await this.blogRepository.findBy({userId: userId, 'banInfo.isBanned': false})
     const notBannedBlogs = await this.blogRepository
     .createQueryBuilder('blog')
     .select(['blog.id'])
@@ -44,7 +42,6 @@ export class BlogQueryRepository {
         })
       }
     })
-    //.where('blog.userId = :userId AND blog.banInfo ->> \'isBanned\' = :isBanned', { isBanned: false })
     .getMany()
 
     const blogIdArray = notBannedBlogs.map((blog) => (blog.id))
@@ -201,13 +198,4 @@ export class BlogQueryRepository {
     const result = await builder.getRawOne()
     return +result.count
   }
-
-  // private generateUserIdFilter(query: QueryParamsModel, userId: string | null) {
-  //   const filter: any = userId === null ? `WHERE (COALESCE(b."name" ILIKE $1, true))` : `WHERE (COALESCE(b."name" ILIKE $1, true)) AND "userId" = ${userId}`
-  //   if (query.searchNameTerm !== null) {
-  //     filter.name = { $regex: query.searchNameTerm, $options: 'i' }
-  //   }
-
-  //   return filter
-  // }
 }
