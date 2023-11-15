@@ -53,9 +53,12 @@ export class CommentRepository {
       .execute()
   }
 
-  async decLike(commentId: string){
-    await this.commentRepository
-      .createQueryBuilder()
+  async decLike(commentId: string, qr?: QueryRunner){
+    const queryBuilder = qr
+      ? qr.manager.getRepository(CommentEntity).createQueryBuilder()
+      : this.commentRepository.createQueryBuilder()
+
+    await queryBuilder
       .update()
       .set({
         likesAndDislikesCount: () => `"likesAndDislikesCount" || jsonb_build_object('likesCount', COALESCE("likesAndDislikesCount"->>'likesCount', '0')::int - 1)`,
@@ -64,9 +67,12 @@ export class CommentRepository {
       .execute()
   }
 
-  async decDisLike(commentId: string){
-    await this.commentRepository
-      .createQueryBuilder()
+  async decDisLike(commentId: string, qr?: QueryRunner){
+    const queryBuilder = qr
+      ? qr.manager.getRepository(CommentEntity).createQueryBuilder()
+      : this.commentRepository.createQueryBuilder()
+
+    await queryBuilder
       .update()
       .set({
         likesAndDislikesCount: () => `"likesAndDislikesCount" || jsonb_build_object('dislikesCount', COALESCE("likesAndDislikesCount"->>'dislikesCount', '0')::int - 1)`,
