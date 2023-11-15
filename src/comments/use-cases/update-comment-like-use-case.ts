@@ -35,31 +35,7 @@ export class UpdateCommentLikeStatusUseCase implements ICommandHandler<UpdateCom
       return true
     }
     if(command.likeStatus === LikeStatuses.None){
-      const qr = this.dataSource.createQueryRunner()
-      await qr.connect()
-      await qr.startTransaction()
-
-      try{
-        if(like.likeStatus === LikeStatuses.Like){
-          await this.commentRepository.decLike(command.commentId, qr)
-        }
-        else if(like.likeStatus === LikeStatuses.Dislike){
-          await this.commentRepository.decDisLike(command.commentId, qr)
-        }
-  
-        await qr.manager.getRepository(CommentLikesAndDislikesEntity).update( { commentId: command.commentId, userId: command.userId }, {likeStatus: command.likeStatus})
-  
-        await qr.commitTransaction()
-
-        return true
-      }
-      catch(error) {
-        console.log(error)
-        await qr.rollbackTransaction()
-      }
-      finally {
-        await qr.release()
-      }
+      return await this.updateNoneLikeStatus(like.likeStatus, command.likeStatus, command.commentId, command.userId)
     }
     if(like.likeStatus !== command.likeStatus){
       const qr = this.dataSource.createQueryRunner()
@@ -100,6 +76,34 @@ export class UpdateCommentLikeStatusUseCase implements ICommandHandler<UpdateCom
     }
 
     return true
+  }
+
+  private async updateNoneLikeStatus(likeLikeStatus: string, likeStatus: string, commentId: string, userId: string) {
+    const qr = this.dataSource.createQueryRunner()
+      await qr.connect()
+      await qr.startTransaction()
+
+      try{
+        if(likeLikeStatus === LikeStatuses.Like){
+          await this.commentRepository.decLike(commentId, qr)
+        }
+        else if(likeLikeStatus === LikeStatuses.Dislike){
+          await this.commentRepository.decDisLike(commentId, qr)
+        }
+  
+        await qr.manager.getRepository(CommentLikesAndDislikesEntity).update( { commentId: commentId, userId: userId }, {likeStatus: likeStatus})
+  
+        await qr.commitTransaction()
+
+        return true
+      }
+      catch(error) {
+        console.log(error)
+        await qr.rollbackTransaction()
+      }
+      finally {
+        await qr.release()
+      }
   }
 
   private async firstLike(comment: CommentEntity, likeStatus: string, userId: string) {
