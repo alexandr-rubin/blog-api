@@ -4,6 +4,8 @@ import { LikeStatuses } from "../../helpers/likeStatuses";
 import { PostQueryRepository } from "../post.query-repository";
 import { PostRepository } from "../post.repository";
 import { PostEntity } from "../entities/post.entity";
+import { DataSource } from "typeorm";
+import { PostLikesAndDislikesEntity } from "../entities/post-likes-and-dislikes.entity";
 
 export class UpdatePostLikeStatusCommand {
   constructor(public postId: string, public likeStatus: string, public userId:string, public login: string) {}
@@ -11,7 +13,7 @@ export class UpdatePostLikeStatusCommand {
 
 @CommandHandler(UpdatePostLikeStatusCommand)
 export class UpdatePostLikeStatusUseCase implements ICommandHandler<UpdatePostLikeStatusCommand> {
-  constructor(private postRepository: PostRepository, private postQueryRepository: PostQueryRepository){}
+  constructor(private postRepository: PostRepository, private postQueryRepository: PostQueryRepository, private dataSource: DataSource){}
   async execute(command: UpdatePostLikeStatusCommand): Promise<boolean> {
     const post = await this.postQueryRepository.getPostgByIdNoView(command.postId)
     if(!post){
@@ -56,15 +58,32 @@ export class UpdatePostLikeStatusUseCase implements ICommandHandler<UpdatePostLi
     if(likeStatus === LikeStatuses.None){
       return true
     }
-    const postLike = {userId: userId, login: login, addedAt: new Date().toISOString(), likeStatus: likeStatus, postId: post.id}
-    await this.postRepository.updateFirstLike(postLike)
-    if(likeStatus === LikeStatuses.Like){
-      await this.postRepository.incLike(post.id)
+    
+    const qr = this.dataSource.createQueryRunner()
+    await qr.connect()
+    await qr.startTransaction()
+
+    try{
+      const postLike = {userId: userId, login: login, addedAt: new Date().toISOString(), likeStatus: likeStatus, postId: post.id}
+      await qr.manager.getRepository(PostLikesAndDislikesEntity).save(postLike)
+      if(likeStatus === LikeStatuses.Like){
+        await this.postRepository.incLike(post.id, qr)
+      }
+      else{
+        await this.postRepository.incDisLike(post.id, qr)
+      }
+      
+      await qr.commitTransaction()
+      
+      return true
     }
-    else{
-      await this.postRepository.incDisLike(post.id)
+    catch(error) {
+      console.log(error)
+      await qr.rollbackTransaction()
     }
-    return true
+    finally {
+      await qr.release()
+    }
   }
 
   private async updateNoneLikeStatus(likeLikeStatus: string, likeStatus: string, postId: string, userId: string) {

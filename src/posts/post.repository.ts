@@ -3,7 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Post, PostDocument, PostLike } from "./models/schemas/Post";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
-import { DataSource, DeleteResult, Repository } from "typeorm";
+import { DataSource, DeleteResult, QueryRunner, Repository } from "typeorm";
 import { SQLCommentInputModel } from "../comments/models/input/SQLCommentInputModel";
 import { PostEntity } from "./entities/post.entity";
 import { PostLikesAndDislikesEntity } from "./entities/post-likes-and-dislikes.entity";
@@ -66,9 +66,12 @@ export class PostRepository {
     return (await this.postLikesAndDislikesRepository.save(postLike)).id
   }
 
-  async incLike(postId: string){
-    await this.postRepository
-      .createQueryBuilder()
+  async incLike(postId: string, qr?: QueryRunner){
+    const queryBuilder = qr
+      ? qr.manager.getRepository(PostEntity).createQueryBuilder()
+      : this.postRepository.createQueryBuilder()
+
+    await queryBuilder
       .update()
       .set({
         likesAndDislikesCount: () => `jsonb_set("likesAndDislikesCount", '{likesCount}', COALESCE(("likesAndDislikesCount"->>'likesCount')::int + 1, '0')::text::jsonb)`
@@ -77,9 +80,12 @@ export class PostRepository {
       .execute()
   }
 
-  async incDisLike(postId: string){
-    await this.postRepository
-      .createQueryBuilder()
+  async incDisLike(postId: string, qr?: QueryRunner){
+    const queryBuilder = qr
+      ? qr.manager.getRepository(PostEntity).createQueryBuilder()
+      : this.postRepository.createQueryBuilder()
+
+    await queryBuilder
       .update()
       .set({
         likesAndDislikesCount: () => `"likesAndDislikesCount" || jsonb_build_object('dislikesCount', COALESCE("likesAndDislikesCount"->>'dislikesCount', '0')::int + 1)`,

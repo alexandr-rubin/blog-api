@@ -84,8 +84,11 @@ export class UpdateCommentLikeStatusUseCase implements ICommandHandler<UpdateCom
         await this.commentRepository.incLike(comment.id, qr)
       }
       else{
-        await this.commentRepository.incDisLike(comment.id)
+        await this.commentRepository.incDisLike(comment.id, qr)
       }
+
+      await qr.commitTransaction()
+      
       return true
     }
     catch(error) {

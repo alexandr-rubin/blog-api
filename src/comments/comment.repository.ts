@@ -39,9 +39,12 @@ export class CommentRepository {
       .execute()
   }
 
-  async incDisLike(commentId: string){
-    return await this.commentRepository
-      .createQueryBuilder()
+  async incDisLike(commentId: string, qr?: QueryRunner){
+    const queryBuilder = qr
+      ? qr.manager.getRepository(CommentEntity).createQueryBuilder()
+      : this.commentRepository.createQueryBuilder()
+
+    return queryBuilder
       .update()
       .set({
         likesAndDislikesCount: () => `"likesAndDislikesCount" || jsonb_build_object('dislikesCount', COALESCE("likesAndDislikesCount"->>'dislikesCount', '0')::int + 1)`,
