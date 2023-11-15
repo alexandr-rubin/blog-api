@@ -94,9 +94,12 @@ export class PostRepository {
       .execute()
   }
 
-  async decLike(postId: string){
-    await this.commentRepository
-      .createQueryBuilder()
+  async decLike(postId: string, qr?: QueryRunner){
+    const queryBuilder = qr
+      ? qr.manager.getRepository(PostEntity).createQueryBuilder()
+      : this.postRepository.createQueryBuilder()
+
+    await queryBuilder
       .update()
       .set({
         likesAndDislikesCount: () => `"likesAndDislikesCount" || jsonb_build_object('likesCount', COALESCE("likesAndDislikesCount"->>'likesCount', '0')::int - 1)`,
@@ -105,9 +108,12 @@ export class PostRepository {
       .execute()
   }
 
-  async decDisLike(postId: string){
-    await this.postRepository
-      .createQueryBuilder()
+  async decDisLike(postId: string, qr?: QueryRunner){
+    const queryBuilder = qr
+      ? qr.manager.getRepository(PostEntity).createQueryBuilder()
+      : this.postRepository.createQueryBuilder()
+
+    await queryBuilder
       .update()
       .set({
         likesAndDislikesCount: () => `"likesAndDislikesCount" || jsonb_build_object('dislikesCount', COALESCE("likesAndDislikesCount"->>'dislikesCount', '0')::int - 1)`,
