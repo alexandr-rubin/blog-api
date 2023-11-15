@@ -4,6 +4,8 @@ import { LikeStatuses } from "../../helpers/likeStatuses";
 import { CommentRepository } from "../comment.repository";
 import { CommentQueryRepository } from "../comment.query-repository";
 import { CommentEntity } from "../entities/comment.entity";
+import { DataSource } from "typeorm";
+import { CommentLikesAndDislikesEntity } from "../entities/comment-likes-and-dislikes";
 
 export class UpdateCommentLikeStatusCommand {
   constructor(public commentId: string, public likeStatus: string, public userId:string) {}
@@ -11,7 +13,7 @@ export class UpdateCommentLikeStatusCommand {
 
 @CommandHandler(UpdateCommentLikeStatusCommand)
 export class UpdateCommentLikeStatusUseCase implements ICommandHandler<UpdateCommentLikeStatusCommand> {
-  constructor(private commentRepository: CommentRepository, private commentQueryRepository: CommentQueryRepository){}
+  constructor(private commentRepository: CommentRepository, private commentQueryRepository: CommentQueryRepository, private dataSource: DataSource){}
 
   async execute(command: UpdateCommentLikeStatusCommand): Promise<boolean> {
     const comment = await this.commentQueryRepository.getCommentByIdNoView(command.commentId)
@@ -70,15 +72,29 @@ export class UpdateCommentLikeStatusUseCase implements ICommandHandler<UpdateCom
   }
 
   private async firstLike(comment: CommentEntity, likeStatus: string, userId: string) {
-    const commentLike = {userId: userId, addedAt: new Date().toISOString(), likeStatus: likeStatus, commentId: comment.id}
-    await this.commentRepository.updateFirstLike(commentLike)
-    if(likeStatus === LikeStatuses.Like){
-      await this.commentRepository.incLike(comment.id)
+    const qr = this.dataSource.createQueryRunner()
+    await qr.connect()
+    await qr.startTransaction()
+
+    try{
+      // add type
+      const commentLike = {userId: userId, addedAt: new Date().toISOString(), likeStatus: likeStatus, commentId: comment.id}
+      await qr.manager.getRepository(CommentLikesAndDislikesEntity).save(commentLike)
+      if(likeStatus === LikeStatuses.Like){
+        await this.commentRepository.incLike(comment.id, qr)
+      }
+      else{
+        await this.commentRepository.incDisLike(comment.id)
+      }
+      return true
     }
-    else{
-      await this.commentRepository.incDisLike(comment.id)
+    catch(error) {
+      console.log(error)
+      await qr.rollbackTransaction()
     }
-    return true
+    finally {
+      await qr.release()
+    }
   }
 
   private async updateCommentLikeStatus(commentId: string, likeStatus: string, userId: string) {

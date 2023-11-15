@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
-import { DataSource, DeleteResult, Repository } from "typeorm";
+import { DataSource, DeleteResult, QueryRunner, Repository } from "typeorm";
 import { CommentLike } from "./models/schemas/CommentLike";
 import { CommentEntity } from "./entities/comment.entity";
 import { CommentLikesAndDislikesEntity } from "./entities/comment-likes-and-dislikes";
@@ -25,9 +25,12 @@ export class CommentRepository {
     DELETE FROM public."Comments"`)
   }
 
-  async incLike(commentId: string){
-    await this.commentRepository
-      .createQueryBuilder()
+  async incLike(commentId: string, qr?: QueryRunner){
+    const queryBuilder = qr
+      ? qr.manager.getRepository(CommentEntity).createQueryBuilder()
+      : this.commentRepository.createQueryBuilder()
+
+    await queryBuilder
       .update()
       .set({
         likesAndDislikesCount: () => `"likesAndDislikesCount" || jsonb_build_object('likesCount', COALESCE("likesAndDislikesCount"->>'likesCount', '0')::int + 1)`,
@@ -74,6 +77,6 @@ export class CommentRepository {
   }
 
   async updateFirstLike(comment: CommentLike) {
-    return (await this.commentLikesAndDislikesRepository.save(comment)).id
+    return await this.commentLikesAndDislikesRepository.save(comment)
   }
 }
