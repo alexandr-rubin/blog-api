@@ -5,13 +5,14 @@ import { UserViewModel } from "./models/view/UserView";
 import { User } from "./models/schemas/User";
 import { UserRoles } from "../helpers/userRoles";
 import { UpdateResult } from "typeorm";
+import { UserEntity } from "./entities/user.entity";
 
 @Injectable()
 export class UserService {
   constructor(private userRepository: UserRepository){}
 
   async createUser(userDto: UserInputModel): Promise<UserViewModel> {
-    const newUser: User = await User.createUser(userDto, true, UserRoles.Admin)
+    const newUser: User = await UserEntity.createUser(userDto, true, UserRoles.Admin)
 
     const id = await this.userRepository.createUser(newUser)
     const {...result} = {id: id, ...newUser,
