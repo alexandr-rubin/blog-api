@@ -9,11 +9,13 @@ import { PostViewModel } from "../posts/models/view/Post";
 import { BanUserForBlogInputModel } from "./models/input/BanUserForBlogInputModel";
 import { BlogBannedUsers } from "./models/schemas/BlogBannedUsers";
 import { SQLPostInputModel } from "../posts/models/input/SQLPost";
-import { DeleteResult, UpdateResult } from "typeorm";
+import { DataSource, DeleteResult, UpdateResult } from "typeorm";
+import { BlogEntity } from "./entities/blog.entity";
+import { PostEntity } from "../posts/entities/post.entity";
 
 @Injectable()
 export class BlogService {
-  constructor(private blogRepository: BlogRepository, private blogQueryRepository: BlogQueryRepository){}
+  constructor(private blogRepository: BlogRepository, private blogQueryRepository: BlogQueryRepository, private dataSource: DataSource){}
 
   async addBlog(blog: BlogInputModel, creatorId: string): Promise<BlogViewModel>{
     const newBlog: Blog = {...blog, createdAt: new Date().toISOString(), isMembership: false, userId: creatorId, banInfo: {isBanned: false, banDate: null}}
@@ -50,15 +52,31 @@ export class BlogService {
   }
 
   async updateBlogById(id: string, newblog: BlogInputModel, userId: string): Promise<UpdateResult> {
-    await this.validateBlogUser(id, userId)
-    const isUpdated = await this.blogRepository.updateBlogById(id, newblog)
-    // throw error after getting blog above?
-    if(!isUpdated){
-      throw new NotFoundException()
+    const qr = this.dataSource.createQueryRunner()
+    await qr.connect()
+    await qr.startTransaction()
+
+    try{
+      await this.validateBlogUser(id, userId)
+      const isUpdated = await qr.manager.getRepository(BlogEntity).update( { id: id }, newblog)
+      // throw error after getting blog above?
+      if(!isUpdated){
+        throw new NotFoundException()
+      }
+
+      await qr.manager.getRepository(PostEntity).update( { blogId: id }, {blogName: newblog.name})
+
+      await qr.commitTransaction()
+      return isUpdated
+    }
+    catch(error) {
+      console.log(error)
+      await qr.rollbackTransaction()
+    }
+    finally {
+      await qr.release()
     }
 
-    await this.blogRepository.updatePostBlogName(id, newblog.name)
-    return isUpdated
   }
 
   async validateBlogUser(blogId: string, userId: string) {
