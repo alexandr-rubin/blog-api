@@ -52,15 +52,16 @@ export class BlogService {
   }
 
   async updateBlogById(id: string, newblog: BlogInputModel, userId: string): Promise<UpdateResult> {
+    await this.validateBlogUser(id, userId)
+    
     const qr = this.dataSource.createQueryRunner()
     await qr.connect()
     await qr.startTransaction()
 
     try{
-      await this.validateBlogUser(id, userId)
       const isUpdated = await qr.manager.getRepository(BlogEntity).update( { id: id }, newblog)
       // throw error after getting blog above?
-      if(!isUpdated){
+      if(isUpdated.affected === 0){
         throw new NotFoundException()
       }
 
@@ -72,6 +73,9 @@ export class BlogService {
     catch(error) {
       console.log(error)
       await qr.rollbackTransaction()
+      if (error instanceof NotFoundException) {
+        throw error
+      }
     }
     finally {
       await qr.release()

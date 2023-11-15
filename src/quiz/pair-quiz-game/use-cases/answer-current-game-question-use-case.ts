@@ -8,8 +8,8 @@ import { AnswerStatuses } from "../../../helpers/answerStatuses";
 import { ForbiddenException } from "@nestjs/common";
 import { GameStatuses } from "../../../helpers/gameStatuses";
 import { AnswerViewModel } from "../models/view/Answer";
-import { DataSource, UpdateResult } from "typeorm";
-import { Cron, SchedulerRegistry } from "@nestjs/schedule";
+import { DataSource, QueryRunner, UpdateResult } from "typeorm";
+import { Cron } from "@nestjs/schedule";
 import { GameTimestampsEntity } from "../entities/game-last-answer-timestamp";
 import { TimestampInputModel } from "../models/input/Timestamp";
 
@@ -20,7 +20,7 @@ export class AnswerCurrentGameQuestionCommand {
 @CommandHandler(AnswerCurrentGameQuestionCommand)
 export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerCurrentGameQuestionCommand> {
   constructor(private readonly quizGamesRepository: QuizGamesRepository, private readonly quizGamesQueryRepository: QuizGamesQueryRepository,
-    private readonly quizQuestionsQueryRepository: QuizQuestionsQueryRepository, private schedulerRegistry: SchedulerRegistry, private dataSource: DataSource){}
+    private readonly quizQuestionsQueryRepository: QuizQuestionsQueryRepository, private dataSource: DataSource){}
   async execute(command: AnswerCurrentGameQuestionCommand): Promise<AnswerViewModel> {
     let currentGame: GamePairViewModel
     try {
@@ -37,39 +37,67 @@ export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerC
       throw new ForbiddenException('You can\'t answer this question.')
     }
 
-    const atLeastOnePlayerAllQuestionsAnswered = currentGame.firstPlayerProgress.answers.length === 5  || currentGame.secondPlayerProgress.answers.length === 5
+    const qr = this.dataSource.createQueryRunner()
+    await qr.connect()
+    await qr.startTransaction()
 
-    const newQuestionIndex = currentPlayerProgress.answers.length
-    const questionId = currentGame.questions[newQuestionIndex].id
+    try{
+      const atLeastOnePlayerAllQuestionsAnswered = currentGame.firstPlayerProgress.answers.length === 5  || currentGame.secondPlayerProgress.answers.length === 5
 
-    const newAnswer = await this.createNewAnswerInputModel(currentGame.id, command.answer, command.userId, questionId)
-    
-    const createdAnswer = await this.quizGamesRepository.createAnswer(newAnswer)
+      const newQuestionIndex = currentPlayerProgress.answers.length
+      const questionId = currentGame.questions[newQuestionIndex].id
 
-    await this.increaseScore(createdAnswer.answerStatus, currentGame, command.userId, isFirstPlayer)
+      const newAnswer = await this.createNewAnswerInputModel(currentGame.id, command.answer, command.userId, questionId)
 
-    if(newQuestionIndex === 4 && atLeastOnePlayerAllQuestionsAnswered){
-      await this.addExtraPoint(currentGame.id, currentGame.firstPlayerProgress.score, currentGame.secondPlayerProgress.score, isFirstPlayer)
-      await this.quizGamesRepository.endGame(currentGame.id, new Date().toISOString(), GameStatuses.Finished)
+      const createdAnswer = await this.quizGamesRepository.createAnswer(newAnswer, qr)
+
+      await this.increaseScore(createdAnswer.answerStatus, currentGame, command.userId, isFirstPlayer, qr)
+
+      if(newQuestionIndex === 4 && atLeastOnePlayerAllQuestionsAnswered){
+        await this.addExtraPoint(currentGame.id, currentGame.firstPlayerProgress.score, currentGame.secondPlayerProgress.score, isFirstPlayer, qr)
+        await this.quizGamesRepository.endGame(currentGame.id, new Date().toISOString(), GameStatuses.Finished, qr)
+      }
+
+      if(newQuestionIndex === 4 && !atLeastOnePlayerAllQuestionsAnswered){
+        const timestamp: TimestampInputModel = { gameId: currentGame.id, isActive: true, createdAt: new Date().toISOString(), isFirstPlayerEndFirst: !isFirstPlayer }
+        await this.quizGamesRepository.createTimestamp(timestamp, qr)
+      }
+
+      await qr.commitTransaction()
+      
+      return {questionId: questionId, answerStatus: createdAnswer.answerStatus, addedAt: createdAnswer.addedAt}
     }
-
-    if(newQuestionIndex === 4 && !atLeastOnePlayerAllQuestionsAnswered){
-      const timestamp: TimestampInputModel = { gameId: currentGame.id, isActive: true, createdAt: new Date().toISOString(), isFirstPlayerEndFirst: !isFirstPlayer }
-      await this.quizGamesRepository.createTimestamp(timestamp)
+    catch(error) {
+      console.log(error)
+      await qr.rollbackTransaction()
     }
-
-    return {questionId: questionId, answerStatus: createdAnswer.answerStatus, addedAt: createdAnswer.addedAt}
+    finally {
+      await qr.release()
+    }
   }
 
   @Cron('*/10 * * * * *')
   private async endExpiredGames(){
     const expiredTimestamps: GameTimestampsEntity[] | null = await this.quizGamesQueryRepository.findExpiredTimestamps()
     for(const expiredTimestamp of expiredTimestamps){
-      // Add extra points
-      const game = await this.quizGamesQueryRepository.getGameByIdNoView(expiredTimestamp.gameId)
-      await this.addExtraPoint(game.id, game.firstPlayerScore, game.secondPlayerScore, expiredTimestamp.isFirstPlayerEndFirst)
-      await this.quizGamesRepository.endGame(expiredTimestamp.gameId, new Date().toISOString(), GameStatuses.Finished)
-      await this.quizGamesRepository.deactivateTimestamp(expiredTimestamp.id)
+      const qr = this.dataSource.createQueryRunner()
+      await qr.connect()
+      await qr.startTransaction()
+      try{
+        // Add extra points
+        const game = await this.quizGamesQueryRepository.getGameByIdNoView(expiredTimestamp.gameId)
+        await this.addExtraPoint(game.id, game.firstPlayerScore, game.secondPlayerScore, expiredTimestamp.isFirstPlayerEndFirst, qr)
+        await this.quizGamesRepository.endGame(expiredTimestamp.gameId, new Date().toISOString(), GameStatuses.Finished, qr)
+        await this.quizGamesRepository.deactivateTimestamp(expiredTimestamp.id, qr)
+        await qr.commitTransaction()
+      }
+      catch(error) {
+        console.log(error)
+        await qr.rollbackTransaction()
+      }
+      finally {
+        await qr.release()
+      }
     }
   }
 
@@ -80,21 +108,21 @@ export class AnswerCurrentGameQuestionUseCase implements ICommandHandler<AnswerC
     return newAnswer
   }
 
-  private async addExtraPoint(gameId: string, firstPlayerScore: number, secondPlayerScore: number , isFirstPlayer: boolean){
+  private async addExtraPoint(gameId: string, firstPlayerScore: number, secondPlayerScore: number , isFirstPlayer: boolean, qr: QueryRunner | null){
     if (isFirstPlayer && secondPlayerScore > 0) {
-      await this.quizGamesRepository.increaseSecondPlayerScore(gameId)
+      await this.quizGamesRepository.increaseSecondPlayerScore(gameId, qr)
     }
     else if(firstPlayerScore > 0){
-      await this.quizGamesRepository.increasefirstPlayerScore(gameId)
+      await this.quizGamesRepository.increasefirstPlayerScore(gameId, qr)
     }
   }
 
-  private async increaseScore(answerStatus: AnswerStatuses, currentGame: GamePairViewModel, userId: string, isFirstPlayer: boolean): Promise<UpdateResult> {
+  private async increaseScore(answerStatus: AnswerStatuses, currentGame: GamePairViewModel, userId: string, isFirstPlayer: boolean, qr: QueryRunner): Promise<UpdateResult> {
     if(answerStatus === AnswerStatuses.Correct && isFirstPlayer){
-      return await this.quizGamesRepository.increasefirstPlayerScore(currentGame.id)
+      return await this.quizGamesRepository.increasefirstPlayerScore(currentGame.id, qr)
     }
     else if(answerStatus === AnswerStatuses.Correct && currentGame.secondPlayerProgress.player.id === userId){
-      return await this.quizGamesRepository.increaseSecondPlayerScore(currentGame.id)
+      return await this.quizGamesRepository.increaseSecondPlayerScore(currentGame.id, qr)
     }
   } 
 
