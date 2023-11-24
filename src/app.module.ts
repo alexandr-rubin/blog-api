@@ -159,7 +159,7 @@ import { GameTimestampsEntity } from './quiz/pair-quiz-game/entities/game-last-a
     //   port: 5432,
     //   username: 'postgres',
     //   password: 'admin',
-    //   database: 'incubatorTypeormAuto',
+    //   database: 'blogapi',
     //   autoLoadEntities: true,
     //   synchronize: true,
     // }),

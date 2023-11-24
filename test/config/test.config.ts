@@ -8,7 +8,7 @@ export const getTestConfiguration = () => ({
         port: 5432,
         username: 'postgres',
         password: 'admin',
-        database: 'incubatorTypeormAuto',
+        database: 'blogapi',
       },
     },
     jwt_secret_key: process.env.JWT_SECRET_KEY ?? 'SECRETKEY',
