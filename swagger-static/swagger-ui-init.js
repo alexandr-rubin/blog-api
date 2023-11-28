@@ -234,6 +234,26 @@ window.onload = function() {
           }
         }
       },
+      "/blogger/blogs/{blogId}/images/wallpaper": {
+        "post": {
+          "operationId": "BlogsController_uploadBlogWallpaperById",
+          "parameters": [
+            {
+              "name": "blogId",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": ""
+            }
+          }
+        }
+      },
       "/posts": {
         "get": {
           "operationId": "PostsController_getPosts",

@@ -24,4 +24,6 @@ export class BlogEntity {
     isBanned: boolean,
     banDate: string | null
   }
+  @Column({ nullable: true })
+  wallpaperURL: string
 }

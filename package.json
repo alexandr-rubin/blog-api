@@ -41,6 +41,7 @@
     "@types/cookie-parser": "^1.4.3",
     "@types/dotenv": "^8.2.0",
     "@types/mongodb-memory-server": "^2.3.0",
+    "@types/multer": "^1.4.11",
     "@types/passport-local": "^1.0.35",
     "@types/uuid": "^9.0.2",
     "bcryptjs": "^2.4.3",
@@ -58,6 +59,7 @@
     "pg": "^8.11.3",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
+    "sharp": "^0.32.6",
     "typeorm": "^0.3.17",
     "uuid": "^9.0.0",
     "wrap-ansi": "^8.1.0"
