@@ -12,6 +12,8 @@ import { SQLPostInputModel } from "../posts/models/input/SQLPost";
 import { DataSource, DeleteResult, UpdateResult } from "typeorm";
 import { BlogEntity } from "./entities/blog.entity";
 import { PostEntity } from "../posts/entities/post.entity";
+import { PhotoSizeViewModel } from "../models/PhotoSizeViewModel";
+import sharp from "sharp";
 
 @Injectable()
 export class BlogService {
@@ -37,6 +39,12 @@ export class BlogService {
     const id = await this.blogRepository.addPostForSpecificBlog(newPost)
     const result = {id: id.toString(), ...newPost, extendedLikesInfo: { likesCount: 0, dislikesCount: 0, myStatus: 'None', 
     newestLikes: [/*{ addedAt: '', login: '', userId: ''}*/]}, likesAndDislikesCount: undefined}
+    return result
+  }
+
+  async uploadBlogWallpaperById(blogId: string, metadata: sharp.Metadata, userId: string): Promise<PhotoSizeViewModel>{
+    await this.validateBlogUser(blogId, userId)
+    const result: PhotoSizeViewModel = {url: 'url', width: metadata.width, height: metadata.height, fileSize: metadata.size}
     return result
   }
 

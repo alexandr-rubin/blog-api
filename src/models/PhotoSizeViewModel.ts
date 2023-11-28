@@ -1,4 +1,4 @@
-export class PhohoSizeViewModel {
+export class PhotoSizeViewModel {
   url!: string
   width!: number
   height!: number

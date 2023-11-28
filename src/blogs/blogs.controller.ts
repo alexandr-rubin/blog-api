@@ -14,6 +14,7 @@ import { JwtAuthGuard } from "../guards/jwt-auth.guard";
 import { UserQueryRepository } from "../users/user.query-repository";
 import { FileInterceptor } from "@nestjs/platform-express/multer";
 import sharp from "sharp";
+import { BlogWallpaperValidationPipe } from "../validation/pipes/blog-wallpaper-validation.pipe";
 
 @UseGuards(JwtAuthGuard/*, RolesGuard*/)
 //@Roles(UserRoles.User)
@@ -77,14 +78,14 @@ export class BlogsController {
     return await this.postService.updatePostById(postId, post, blogId) 
   }
 
-  @HttpCode(HttpStatusCode.CREATED_201)
   @Post(':blogId/images/wallpaper')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadBlogWallpaperById(@Param('blogId', BlogIdValidationPipe) id: string, @UploadedFile() file: Express.Multer.File, @Req() req: AccessTokenVrifyModel) {
-    console.log(file)
-    const metadata = await sharp(file.buffer).metadata()
-    console.log(metadata)
-    return metadata
+  async uploadBlogWallpaperById(@Param('blogId', BlogIdValidationPipe) id: string, @UploadedFile(BlogWallpaperValidationPipe) metadata: sharp.Metadata, @Req() req: AccessTokenVrifyModel) {
+    // think about where get file metadata, pie or maybe controller/service
+    // also should return blog main images
+    const result = await this.blogService.uploadBlogWallpaperById(id, metadata, req.user.userId)
+
+    return result
   }
 
   @HttpCode(HttpStatusCode.NO_CONTENT_204)
