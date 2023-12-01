@@ -38,7 +38,7 @@ export class BlogService {
     likesAndDislikesCount: { likesCount: 0, dislikesCount: 0}}
     const id = await this.blogRepository.addPostForSpecificBlog(newPost)
     const result = {id: id.toString(), ...newPost, extendedLikesInfo: { likesCount: 0, dislikesCount: 0, myStatus: 'None', 
-    newestLikes: [/*{ addedAt: '', login: '', userId: ''}*/]}, likesAndDislikesCount: undefined}
+    newestLikes: []}, likesAndDislikesCount: undefined}
     return result
   }
 
