@@ -11,6 +11,6 @@ export class CommentExistValidator implements ValidatorConstraintInterface {
   }
 
   defaultMessage(args: ValidationArguments) {
-    return `Comment with id "${args.value}" does not exist.`;
+    return `Comment with id "${args.value}" does not exist.`
   }
 }

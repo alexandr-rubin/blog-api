@@ -8,12 +8,11 @@ export class QuestionExistValidator implements ValidatorConstraintInterface {
   constructor(private readonly quizQuestionsQueryRepository: QuizQuestionsQueryRepository) {}
 
   async validate(questionId: string) {
-    // проверка на null mb
     const question = await this.quizQuestionsQueryRepository.getQuestionByIdNoView(questionId);
-    return !!question;
+    return !!question
   }
 
   defaultMessage(args: ValidationArguments) {
-    return `Question with id "${args.value}" does not exist.`;
+    return `Question with id "${args.value}" does not exist.`
   }
 }

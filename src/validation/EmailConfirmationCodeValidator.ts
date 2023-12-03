@@ -27,6 +27,6 @@ export class EmailConfirmationCodeValidator implements ValidatorConstraintInterf
   }
 
   defaultMessage(args: ValidationArguments) {
-    return `User with id "${args.value}" does not exist.`;
+    return `User with id "${args.value}" does not exist.`
   }
 }

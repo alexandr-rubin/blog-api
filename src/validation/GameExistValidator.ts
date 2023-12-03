@@ -8,12 +8,11 @@ export class QuizGameExistValidator implements ValidatorConstraintInterface {
   constructor(private readonly quizGamesQueryRepository: QuizGamesQueryRepository) {}
 
   async validate(gameId: string) {
-    // проверка на null mb
-    const game = await this.quizGamesQueryRepository.getGameByIdNoView(gameId);
-    return !!game;
+    const game = await this.quizGamesQueryRepository.getGameByIdNoView(gameId)
+    return !!game
   }
 
   defaultMessage(args: ValidationArguments) {
-    return `Game with id "${args.value}" does not exist.`;
+    return `Game with id "${args.value}" does not exist.`
   }
 }

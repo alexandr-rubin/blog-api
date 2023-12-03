@@ -16,6 +16,6 @@ export class PasswordRecoveryCodeExistValidator implements ValidatorConstraintIn
   }
 
   defaultMessage(args: ValidationArguments) {
-    return `User with id "${args.value}" does not exist.`;
+    return `User with id "${args.value}" does not exist.`
   }
 }
