@@ -20,15 +20,15 @@ export class RolesGuard implements CanActivate {
     const { user } = context.switchToHttp().getRequest();
 
     if (requiredRoles.includes(UserRoles.Guest) && !user) {
-      return true; // Если требуется гость и пользователь не авторизован, разрешаем доступ
+      return true
     }
 
     if (!user || !user.role) {
-      return false; // Если пользователь не авторизован или у него нет ролей, запрещаем доступ
+      return false
     }
 
     const userRole = user.role;
 
-    return requiredRoles.includes(userRole); // Проверяем, что требуемая роль совпадает с ролью пользователя
+    return requiredRoles.includes(userRole)
   }
 }
