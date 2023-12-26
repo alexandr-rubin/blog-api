@@ -1,5 +1,5 @@
 export const getConfiguration = () => ({
-  // nado || ?
+  // nado || ???
   port: parseInt(process.env.PORT, 10) ?? 3000,
   db: {
     mongo: {
